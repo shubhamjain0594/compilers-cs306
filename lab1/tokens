@@ -1,0 +1,43 @@
+TYPE_SPECIFIER:    void|int|float
+
+DIGIT				[0-9]
+LETTER				[a-zA-z]				
+IF                  if
+ELSE                else
+FOR                 for
+WHILE               while
+RETURN              return 		
+IDENTIFIER			{LETTER}{LETTER|DIGIT}*
+INC_OP				\+\+
+DEC_OP				--
+EQ_OP				==
+LE_OP               <=|=< 
+GE_OP               >=|=>
+NE_OP               !=  
+AND_OP              &&
+OR_OP               \|\|
+(					\(
+)					\)
+{					\{
+}					\}
+[					\[	
+]					\]
+,					,
+;					;
+!					!
++					\+
+-					-
+*					\*
+/					\/
+INT_CONSTANT		DIGIT+
+STRING_CONSTANT     ["[LETTER|DIGIT]*"]
+FLOAT_CONSTANT		[[{DIGIT}+\.]|[\.{DIGIT}+]|[{DIGIT}+\.{DIGIT}+]][[[eE][+-][0-9]*]|[[eE][0-9]*]]
+int, float, string constant
+
+
+
+
+
+ 
+
+
