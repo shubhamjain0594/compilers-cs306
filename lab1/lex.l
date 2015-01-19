@@ -3,7 +3,7 @@ VOID				void
 INT 				int
 FLOAT 			float
 DIGIT				[0-9]
-LETTER				[a-zA-z]
+LETTER				[a-zA-Z]
 IF                  if
 ELSE                else
 FOR                 for
