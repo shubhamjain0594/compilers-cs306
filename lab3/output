@@ -1,0 +1,36 @@
+ 
+
+  
+    
+	
+
+
+
+	
+
+      
+(Block [
+	(For 
+		(ASSIGN( Id " x " )( IntConst 0 ))
+		(LT( Id " x " )( IntConst 10 ))
+		(PP( Id " x " ))
+		(Block [
+			(Ass ( Id " x " )( IntConst 12 ))
+		])
+	)
+	(Ass ( Id " y " )( Id " x " ))
+	(While 
+		(LT( Id " x " )( IntConst 10 ))
+		(Block [
+			(Ass ( Id " y " )(PLUS( Id " y " )( IntConst 1 )))
+		])
+	)
+	(If 
+		(GT( Id " y " )( IntConst 1 ))
+		(Block [
+			(Ass ( Id " x " )(MINUS( Id " x " )( IntConst 1 )))
+			(Ass ( Id " y " )(PLUS( Id " y " )( IntConst 1 )))
+		])
+		(Empty)
+	)
+])

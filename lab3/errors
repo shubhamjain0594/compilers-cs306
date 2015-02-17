@@ -1,0 +1,13 @@
+rm -f Scanner*
+rm -f Parser*
+flexc++ lex.l; 
+bisonc++ --construction  parse.y; 
+[parse.y: warning] Line 430: 35 Shift/Reduce conflict(s)
+./sedscript
+sed: preserving permissions for ‘./sedCInpCg’: Operation not permitted
+sed: preserving permissions for ‘./sedtU4LLg’: Operation not permitted
+sed: preserving permissions for ‘./sedSjOu8i’: Operation not permitted
+sed: preserving permissions for ‘./sedyBRTRi’: Operation not permitted
+sed: preserving permissions for ‘./sedJoSdGl’: Operation not permitted
+sed: preserving permissions for ‘./sed8tGM0n’: Operation not permitted
+g++   --std=c++11 lex.cc parse.cc main.cc;
