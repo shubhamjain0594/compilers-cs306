@@ -9,7 +9,6 @@ int main (int argc, char** arg)
 {
   Parser parser;
   parser.parse();
-  
   cout<<"Global Symbol Table"<<endl;
   gst->print();
   cout<<endl;

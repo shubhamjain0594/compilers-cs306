@@ -1,7 +1,7 @@
 #!/bin/sh
 
 sed -i '/int lex();/a static int line_num;' Scanner.h;
-sed -i '/include "Scanner.ih"/a int Scanner::line_num =0;' lex.cc;
+sed -i '/include "Scanner.ih"/a int Scanner::line_num =1;' lex.cc;
 
 sed -i '/include/a #include "Parserbase.h"' Scanner.ih;
 sed -i '/insert preincludes/a #include "headers.cc"' Parserbase.h;

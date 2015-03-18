@@ -1,7 +1,11 @@
-(Block [
+  0
+  0
+  0
+	 	 	 	(Block [
 	(Ass ( Id " i " )( IntConst 2 ))
 ])
- 	 			  					(Block [
+  8
+	 			  					(Block [
 	(For 
 		(ASSIGN( Id " i " )( IntConst 0 ))
 		(LT( Id " i " )( IntConst 6 ))
@@ -11,6 +15,7 @@
 		])
 	)
 ])
+16
 Global Symbol Table
 a function 0 int
 main function 0 void
@@ -24,5 +29,6 @@ y param 56 int[4] 16
 z param 52 int 4
 
 Symbol Table for main
+a param 4 int 4
 i local -4 int 4
 

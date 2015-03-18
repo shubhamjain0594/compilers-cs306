@@ -88,18 +88,22 @@ parameter_declaration
   : type_specifier declarator
   {
     //need to check for void declarations
-    //need to check for conflicting declarations
-    // what about the size, type, offset of variables 
-    ($2)->type = $1;
-    //cout<<($2)->name<<" "<<$1<<" "<<current_scope->offset<<endl;
-    symbol_table_node* temp = new symbol_table_node(($2)->name,$1,current_scope->offset);
-    temp->type = "param";
-    temp->decl_type = $2;
-    temp->size = ($2)->calculate_size();
-    current_scope->insert_entry(temp->name,temp);
-    current_scope->offset = current_scope->offset + temp->size;
-    //current_scope->print();
-    //cout<<temp->size;
+    cout<<Scanner::line_num<<endl;
+    if($1=="VOID"){
+    }else{
+      //need to check for conflicting declarations
+      // what about the size, type, offset of variables 
+      ($2)->type = $1;
+      //cout<<($2)->name<<" "<<$1<<" "<<current_scope->offset<<endl;
+      symbol_table_node* temp = new symbol_table_node(($2)->name,$1,current_scope->offset);
+      temp->type = "param";
+      temp->decl_type = $2;
+      temp->size = ($2)->calculate_size();
+      current_scope->insert_entry(temp->name,temp);
+      current_scope->offset = current_scope->offset + temp->size;
+      //current_scope->print();
+      //cout<<temp->size;
+    }
   } 
   ;
 
