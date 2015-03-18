@@ -97,7 +97,7 @@ parameter_declaration
       //cout<<($2)->name<<" "<<$1<<" "<<current_scope->offset<<endl;
       symbol_table_node* temp = new symbol_table_node(($2)->name,$1,current_scope->offset);
       temp->type = "param";
-      temp->decl_type = $2;
+      temp->decl_type = ($2);
       temp->size = ($2)->calculate_size();
       current_scope->insert_entry(temp->name,temp);
       current_scope->offset = current_scope->offset + temp->size;

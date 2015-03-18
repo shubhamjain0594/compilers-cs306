@@ -46,10 +46,14 @@ int decl_struct::calculate_size()
 
 void decl_struct::print()
 {
+  for(int i=0; i<indices.size(); i++)
+  {
+    cout<<"array ("<<indices[i]<<", ";
+  }
   cout<<type;
   for(int i=0; i<indices.size(); i++)
   {
-    cout<<"["<<indices[i]<<"]";
+    cout<<")";
   }
 }
 
