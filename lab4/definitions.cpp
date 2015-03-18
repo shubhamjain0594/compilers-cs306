@@ -14,10 +14,47 @@ symbol_table *gst = new symbol_table();
 symbol_table *current_scope = gst;
 vector<string> errors;
 
+bool exists(string name, symbol_table* scope)
+{
+  return scope->st.find(name)!=scope->st.end(); 
+}
+
+bool check_declaration_function(string name)
+{
+  //function should not be redeclared
+  string error_msg;
+  if(exists(name, gst))
+  {
+    error_msg = "function redeclared";
+    add_error(Scanner::line_num, error_msg);
+    return false;
+  }
+  return true;
+}
+
+bool check_declaration(string name, string type)
+{
+  string error_msg;
+  if(type == "void")
+  {
+    error_msg = "variable declared void";
+    add_error(Scanner::line_num, error_msg);
+    return false;
+  }
+  //variable should not be redeclared
+  if(exists(name, current_scope))
+  {
+    error_msg = "variable redeclared";
+    add_error(Scanner::line_num, error_msg);
+    return false;
+  }
+  return true;
+}
+
 void add_error(int line, string s)
 {
-  string temp = "Line number: " + std::to_string(line) + " : " + s;
-  //cout<<temp<<endl;
+  string temp = "Line number: " + std::to_string(line) + " : Error :" + s;
+  cout<<temp<<endl;
   errors.push_back(temp);
 }
 
@@ -48,7 +85,7 @@ void decl_struct::print()
 {
   for(int i=0; i<indices.size(); i++)
   {
-    cout<<"array ("<<indices[i]<<", ";
+    cout<<"array("<<indices[i]<<",";
   }
   cout<<type;
   for(int i=0; i<indices.size(); i++)

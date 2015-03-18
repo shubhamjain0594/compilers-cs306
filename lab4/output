@@ -1,6 +1,10 @@
-      	 	 	 	(Block [
+      	 	 Line number: 4 : Error :variable redeclared
+	 	 	(Block [
 	(Ass ( Id " i " )( IntConst 2 ))
 ])
+  	 Line number: 12 : Error :variable declared void
+	 	  Line number: 15 : Error :function redeclared
+(Empty)
   	 			  					(Block [
 	(For 
 		(ASSIGN( Id " i " )( IntConst 0 ))
@@ -16,11 +20,11 @@ a function 0 int
 main function 0 void
 
 Symbol Table for a
-a local -8 array (2, array (1, array (3, int))) 24
-b local -32 array (4, float) 16
+a local -8 array(2,array(1,array(3,int))) 24
+b local -32 array(4,float) 16
 i local -4 int 4
-x param 4 array (2, array (2, array (3, int))) 48
-y param 56 array (4, int) 16
+x param 4 array(2,array(2,array(3,int))) 48
+y param 56 array(4,int) 16
 z param 52 int 4
 
 Symbol Table for main

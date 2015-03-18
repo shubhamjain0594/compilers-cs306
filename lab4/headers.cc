@@ -14,6 +14,7 @@ struct decl_struct
   string name;
   string type;
   std::vector<int> indices;
+  decl_struct();
   decl_struct(string n);
   int calculate_size();
   void print();

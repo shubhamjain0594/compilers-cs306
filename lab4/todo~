@@ -5,11 +5,12 @@ setting offsets
 
 type check
 
+va cannot be void
+undeclared or redeclared paramater
+
 in declaraions:
 parameter cannot be void
 cannot be redeclared
-
-undeclared when used
 
 for functions:
 check for stuff when?

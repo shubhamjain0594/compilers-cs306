@@ -44,12 +44,19 @@ translation_unit
 function_definition
   : type_specifier {current_scope = new symbol_table;current_scope->offset = 4;} fun_declarator {current_scope->offset=-4;} compound_statement 
   {
-    $$ = $5;
-    symbol_table_node* stn = new symbol_table_node($3, "function", current_scope);
-    decl_struct *temp = new decl_struct($3);
-    temp->type = $1;
-    stn->decl_type = temp;
-    gst->insert_entry($3, stn);
+  	if(check_declaration_function($3))
+  	{
+	    $$ = $5;
+	    symbol_table_node* stn = new symbol_table_node($3, "function", current_scope);
+	    decl_struct *temp = new decl_struct($3);
+	    temp->type = $1;
+	    stn->decl_type = temp;
+	    gst->insert_entry($3, stn);
+	}
+	else
+	{
+		$$ = new stmt_node();
+	}
   }
   ;
 
@@ -89,8 +96,8 @@ parameter_declaration
   {
     //need to check for void declarations
     //cout<<Scanner::line_num<<endl;
-    if($1=="VOID"){
-    }else{
+    if(check_declaration(($2)->name,$1))
+    {
       //need to check for conflicting declarations
       // what about the size, type, offset of variables 
       ($2)->type = $1;
@@ -438,14 +445,16 @@ declarator_list
   : declarator
   {
     ($1)->type = temp_type;
-    symbol_table_node* temp = new symbol_table_node(($1)->name,temp_type,current_scope->offset);
-    temp->type = "local";
-    temp->decl_type = $1;
-    temp->size = ($1)->calculate_size();
-    current_scope->insert_entry(temp->name,temp);
-    current_scope->offset = current_scope->offset - temp->size;
-    //current_scope->print();
-    //cout<<temp->size;    
+    if(check_declaration(($1)->name,temp_type)){
+    	symbol_table_node* temp = new symbol_table_node(($1)->name,temp_type,current_scope->offset);
+    	temp->type = "local";
+    	temp->decl_type = $1;
+    	temp->size = ($1)->calculate_size();
+    	current_scope->insert_entry(temp->name,temp);
+    	current_scope->offset = current_scope->offset - temp->size;
+    	//current_scope->print();
+    	//cout<<temp->size;    
+    }
   }
   | declarator_list ',' declarator 
   ;
