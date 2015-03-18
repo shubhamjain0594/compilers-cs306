@@ -7,6 +7,8 @@
 
 using namespace std;
 
+void add_error(int line, string s);
+
 struct decl_struct
 {
   string name;

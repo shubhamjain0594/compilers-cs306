@@ -88,7 +88,7 @@ parameter_declaration
   : type_specifier declarator
   {
     //need to check for void declarations
-    cout<<Scanner::line_num<<endl;
+    //cout<<Scanner::line_num<<endl;
     if($1=="VOID"){
     }else{
       //need to check for conflicting declarations

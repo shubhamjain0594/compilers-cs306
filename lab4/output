@@ -1,11 +1,7 @@
-  0
-  0
-  0
-	 	 	 	(Block [
+      	 	 	 	(Block [
 	(Ass ( Id " i " )( IntConst 2 ))
 ])
-  8
-	 			  					(Block [
+  	 			  					(Block [
 	(For 
 		(ASSIGN( Id " i " )( IntConst 0 ))
 		(LT( Id " i " )( IntConst 6 ))
@@ -15,7 +11,6 @@
 		])
 	)
 ])
-16
 Global Symbol Table
 a function 0 int
 main function 0 void

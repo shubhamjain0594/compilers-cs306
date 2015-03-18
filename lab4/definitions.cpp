@@ -12,7 +12,14 @@ int tab_count = 0;
 string temp_type;
 symbol_table *gst = new symbol_table();
 symbol_table *current_scope = gst;
+vector<string> errors;
 
+void add_error(int line, string s)
+{
+  string temp = "Line number: " + std::to_string(line) + " : " + s;
+  //cout<<temp<<endl;
+  errors.push_back(temp);
+}
 
 decl_struct::decl_struct(string n)
 {
