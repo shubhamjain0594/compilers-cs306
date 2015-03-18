@@ -9,6 +9,106 @@ using namespace std;
   // the constructor for node links the node to its children,
   // and stores the character representation of the operator.
 int tab_count = 0;
+string temp_type;
+symbol_table *gst = new symbol_table();
+symbol_table *current_scope = gst;
+
+
+decl_struct::decl_struct(string n)
+{
+  name = n;
+}
+
+int decl_struct::calculate_size()
+{
+  int size=0;
+  if(type=="void")
+  {
+    size=0;
+  }
+  else
+  {
+    size = 4;
+    for(int i=0; i<indices.size();i++)
+    {
+      size = size * indices[i];
+    }
+  }
+  return size;
+}
+
+void decl_struct::print()
+{
+  cout<<type;
+  for(int i=0; i<indices.size(); i++)
+  {
+    cout<<"["<<indices[i]<<"]";
+  }
+}
+
+symbol_table_node::symbol_table_node(string n, string t, int o)
+{
+  name = n;
+  offset = o;
+  if(type=="int")
+  {
+      size=4;
+  }
+  else if(type=="void")
+  {
+      size = 0;
+  }
+}
+
+
+int getSize(string t){
+  if(t=="int"){
+    return 4;
+  }
+  if(t=="float"){
+    return 4;
+  }
+  if(t=="void"){
+    return 0;
+  }
+  return 0;
+}
+
+symbol_table_node::symbol_table_node(string n, string t, symbol_table* st)
+{
+  name = n;
+  type=t;
+  offset = 0;
+  local_symbol_table = st;
+}
+
+void symbol_table_node::print()
+{
+  cout<<name<<" "<<type <<" "<<offset<<" ";
+  decl_type->print();
+  if(type!="function")
+  {
+    cout<<" "<<size;
+  }
+  cout<<endl;
+}
+
+symbol_table::symbol_table()
+{
+  offset = 0;
+}
+
+void symbol_table::insert_entry(string s, symbol_table_node* stn){
+  st.insert(make_pair(s,stn));
+}
+
+void symbol_table::print(){
+  for(map<string,symbol_table_node*>::iterator it = st.begin(); it!=st.end(); it++ )
+  {
+    (*it).second->print();
+  }
+}
+
 void print_tab(){
   for(int i=0;i<tab_count;i++){
     cout<<"\t";
@@ -75,7 +175,17 @@ void return_node::print(){
   child->print();
   cout<<")"<<endl;
 }
-
+funcall_stmt_node::funcall_stmt_node(string& i, exp_node_list*& e)
+{
+  id = i;
+  enl = e;
+}
+void funcall_stmt_node::print(){
+  cout<<"(FuncallStmt";
+  cout<<"( Id \" "<<id<<" \" )";
+  enl->print();
+  cout<<")";
+}
 if_node::if_node(exp_node*& l, stmt_node*& m, stmt_node*& r)
 {
   left = l;

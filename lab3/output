@@ -1,36 +1,10 @@
- 
-
-  
-    
-	
-
-
-
-	
-
-      
 (Block [
 	(For 
-		(ASSIGN( Id " x " )( IntConst 0 ))
-		(LT( Id " x " )( IntConst 10 ))
-		(PP( Id " x " ))
+		(ASSIGN( Id " i " )( IntConst 0 ))
+		(LT( Id " i " )( IntConst 6 ))
+		(PP( Id " i " ))
 		(Block [
-			(Ass ( Id " x " )( IntConst 12 ))
+			(Ass ( Id " a " )(Funcall( Id " win " )( Id " india " ) ))
 		])
-	)
-	(Ass ( Id " y " )( Id " x " ))
-	(While 
-		(LT( Id " x " )( IntConst 10 ))
-		(Block [
-			(Ass ( Id " y " )(PLUS( Id " y " )( IntConst 1 )))
-		])
-	)
-	(If 
-		(GT( Id " y " )( IntConst 1 ))
-		(Block [
-			(Ass ( Id " x " )(MINUS( Id " x " )( IntConst 1 )))
-			(Ass ( Id " y " )(PLUS( Id " y " )( IntConst 1 )))
-		])
-		(Empty)
 	)
 ])

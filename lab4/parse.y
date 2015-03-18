@@ -1,3 +1,4 @@
+/*%debug */
 /* Changes:  */
 
 /* 1. Character constants removed */
@@ -18,14 +19,14 @@
 /* ---------------------------------------------------- */
 %scanner Scanner.h
 %scanner-token-function d_scanner.lex()
-%polymorphic STMT:stmt_node*; EXP:exp_node*; ARRAY:array_ref_node*; TYPE_INT: int*; TYPE_STRING: string;TYPE_FLOAT: float*; EXP_LIST: exp_node_list*; STMT_LIST: stmt_node_list*;
+%polymorphic STMT:stmt_node*; EXP:exp_node*; ARRAY:array_ref_node*; TYPE_INT: int*; TYPE_STRING: string;TYPE_FLOAT: float*; EXP_LIST: exp_node_list*; STMT_LIST: stmt_node_list*; ABST: abstract_astnode*; DEC_STR: decl_struct *; 
 %type <STMT> translation_unit function_definition compound_statement statement assignment_statement selection_statement iteration_statement
 %type <EXP> expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression unary_expression postfix_expression primary_expression l_expression
 %type <EXP_LIST> expression_list
 %type <STMT_LIST> statement_list
-%type <TYPE_STRING> unary_operator IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT
-%token VOID INT FLOAT AND_OP OR_OP EQ_OP NE_OP LE_OP GE_OP IF ELSE WHILE FOR RETURN INC_OP 
-
+%type <TYPE_STRING> unary_operator IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT type_specifier VOID INT FLOAT fun_declarator constant_expression
+%token AND_OP OR_OP EQ_OP NE_OP LE_OP GE_OP IF ELSE WHILE FOR RETURN INC_OP
+%type <DEC_STR> declarator
 %%
 
 translation_unit
@@ -41,40 +42,88 @@ translation_unit
   ;
 
 function_definition
-  : type_specifier fun_declarator compound_statement 
+  : type_specifier {current_scope = new symbol_table;current_scope->offset = 4;} fun_declarator {current_scope->offset=-4;} compound_statement 
   {
-    $$ = $3;
+    $$ = $5;
+    symbol_table_node* stn = new symbol_table_node($3, "function", current_scope);
+    decl_struct *temp = new decl_struct($3);
+    temp->type = $1;
+    stn->decl_type = temp;
+    gst->insert_entry($3, stn);
   }
   ;
 
 type_specifier
-  : VOID  
-  | INT   
-  | FLOAT 
+  : VOID
+  {
+    $$=$1;
+  }
+  | INT
+  {
+    $$=$1;
+  }   
+  | FLOAT
+  {
+    $$=$1;
+  }
   ;
 
 fun_declarator
-  : IDENTIFIER '(' parameter_list ')' 
+  : IDENTIFIER '(' parameter_list ')'
+  {
+    $$ = $1;
+  } 
   | IDENTIFIER '(' ')' 
+  {
+    $$ = $1;
+  }
   ;
 
 parameter_list
-  : parameter_declaration 
+  : parameter_declaration
   | parameter_list ',' parameter_declaration 
   ;
 
 parameter_declaration
-  : type_specifier declarator 
+  : type_specifier declarator
+  {
+    //need to check for void declarations
+    //need to check for conflicting declarations
+    // what about the size, type, offset of variables 
+    ($2)->type = $1;
+    //cout<<($2)->name<<" "<<$1<<" "<<current_scope->offset<<endl;
+    symbol_table_node* temp = new symbol_table_node(($2)->name,$1,current_scope->offset);
+    temp->type = "param";
+    temp->decl_type = $2;
+    temp->size = ($2)->calculate_size();
+    current_scope->insert_entry(temp->name,temp);
+    current_scope->offset = current_scope->offset + temp->size;
+    //current_scope->print();
+    //cout<<temp->size;
+  } 
   ;
 
 declarator
-  : IDENTIFIER 
-  | declarator '[' constant_expression ']' 
+  : IDENTIFIER
+  {
+    $$ = new decl_struct($1);
+  } 
+  | declarator '[' constant_expression ']'
+  {
+    (($1)->indices).push_back(stoi($3));
+    $$ = $1;
+  } 
   ;
 
 constant_expression 
-  : INT_CONSTANT 
-  | FLOAT_CONSTANT 
+  : INT_CONSTANT
+  {
+    $$ = $1;
+  }
+  | FLOAT_CONSTANT
+  {
+    $$ = $1;
+  }
   ;
 
 compound_statement
@@ -122,6 +171,15 @@ statement
   | RETURN expression ';' 
   {
     $$ = new return_node($2);
+  }
+  | IDENTIFIER '(' ')' ';' 
+  {
+    exp_node_list* temp_list = new exp_node_list();
+    $$ = new funcall_stmt_node($1, temp_list);
+  }
+  | IDENTIFIER '(' expression_list ')' ';' 
+  {
+    $$ = new funcall_stmt_node($1, $3);
   }
   ;
 
@@ -369,11 +427,22 @@ declaration_list
   ;
 
 declaration
-  : type_specifier declarator_list';'
+  : type_specifier {temp_type = $1;} declarator_list';'
   ;
 
 declarator_list
   : declarator
+  {
+    ($1)->type = temp_type;
+    symbol_table_node* temp = new symbol_table_node(($1)->name,temp_type,current_scope->offset);
+    temp->type = "local";
+    temp->decl_type = $1;
+    temp->size = ($1)->calculate_size();
+    current_scope->insert_entry(temp->name,temp);
+    current_scope->offset = current_scope->offset - temp->size;
+    //current_scope->print();
+    //cout<<temp->size;    
+  }
   | declarator_list ',' declarator 
   ;
 

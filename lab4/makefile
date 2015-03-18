@@ -1,6 +1,5 @@
 all:   clean lex.cc parse.cc main.cc 
 	./sedscript
-	# sed -i '19 a\ int tab_count = 0;' Parser.h;
 	g++  -g --std=c++11 lex.cc parse.cc main.cc;
 	./a.out < test-assembly > output;
 #	a.out < test > junk;
