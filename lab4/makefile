@@ -1,7 +1,7 @@
 all:   clean lex.cc parse.cc main.cc 
 	./sedscript
 	g++  -g --std=c++11 lex.cc parse.cc main.cc;
-	./a.out < test-assembly > output;
+	./a.out main < test-assembly > output;
 #	a.out < test > junk;
 
 lex.cc: lex.l  Scanner.ih

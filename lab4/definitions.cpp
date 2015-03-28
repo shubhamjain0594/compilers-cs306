@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string>
 #include <map>
-#include <algorithm>
+#include <set>
 #include <list>
 
 using namespace std;
@@ -15,6 +15,8 @@ string temp_type;
 symbol_table *gst = new symbol_table();
 symbol_table *current_scope = gst;
 string current_func_type="";
+string current_func_name="";
+set<string> printables;
 vector<string> errors;
 
 decl_struct::decl_struct(string n)

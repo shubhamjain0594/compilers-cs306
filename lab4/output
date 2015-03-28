@@ -1,13 +1,4 @@
-  	 (Block [
-	(Return ( IntConst 0 ))
-])
- 	 (Block [
-	(Return ( IntConst 0 ))
-])
-   (Block [
-	(Return ( FloatConst 1.4 ))
-])
-      	 	 	 								(Block [
+(Block [
 	(Ass ( Id " a " )(PP_INT( ( ( Id " b " ) [ ( IntConst 1 ) ] ) [ ( IntConst 2 ) ] )))
 	(Ass ( Id " c " )(Funcall( Id " a " )( FloatConst 2.4 ) ))
 	(Ass ( Id " c " )(Funcall( Id " b " )))

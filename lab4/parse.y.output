@@ -1,4 +1,4 @@
-[[parse.y (info)] Line 641: 
+[[parse.y (info)] Line 648: 
 Production Rules
 (rule precedences determined from %prec or 1st terminal between parentheses):
 1: translation_unit ->  function_definition
@@ -136,18 +136,18 @@ FIRST sets:
    statement_list: { IDENTIFIER IF WHILE FOR RETURN '{' ';' }
    statement: { IDENTIFIER IF WHILE FOR RETURN '{' ';' }
    assignment_statement: { IDENTIFIER ';' }
-   expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' '!' }
-   logical_and_expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' '!' }
-   equality_expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' '!' }
-   relational_expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' '!' }
-   additive_expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' '!' }
-   multiplicative_expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' '!' }
-   unary_expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' '!' }
+   expression: { '!' IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' }
+   logical_and_expression: { '!' IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' }
+   equality_expression: { '!' IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' }
+   relational_expression: { '!' IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' }
+   additive_expression: { '!' IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' }
+   multiplicative_expression: { '!' IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' }
+   unary_expression: { '!' IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' }
    postfix_expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' }
    primary_expression: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' }
    l_expression: { IDENTIFIER }
-   expression_list: { IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' '!' }
-   unary_operator: { '-' '!' }
+   expression_list: { '!' IDENTIFIER INT_CONSTANT STRING_LITERAL FLOAT_CONSTANT '(' '-' }
+   unary_operator: { '!' '-' }
    selection_statement: { IF }
    iteration_statement: { WHILE FOR }
    declaration: { VOID INT FLOAT }

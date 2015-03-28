@@ -33,12 +33,18 @@
 translation_unit
   : function_definition
   {
-    $1->print();
+    //cout<<current_func_name<<endl;
+    if(printables.find(current_func_name)!=printables.end()){
+      $1->print();
+    }
   } 
   | translation_unit function_definition 
   {
     $$ = $1;
-    $2->print();
+    //cout<<current_func_name<<endl;
+    if(printables.find(current_func_name)!=printables.end()){
+      $2->print();
+    }
   }
   ;
 
@@ -57,6 +63,7 @@ function_definition
 	    temp->type = $1;
 	    stn->decl_type = temp;
 	    gst->insert_entry($3, stn);
+      current_func_name=$3;
 	}
 	else
 	{
