@@ -560,7 +560,13 @@ floatconst_node::floatconst_node(string& n)
 
 void floatconst_node::print()
 {
-  cout<<"( FloatConst "<<num<<" )";  
+  if(isCast){
+    cout<<"(TO_"<<getUppercase(castTo)<<" ";
+  }
+  cout<<"( FloatConst "<<num<<" )"; 
+  if(isCast){
+      cout<<" )";
+  } 
 }
 intconst_node::intconst_node(string& n)
 {
@@ -570,7 +576,13 @@ intconst_node::intconst_node(string& n)
 }
 void intconst_node::print()
 {
+  if(isCast){
+    cout<<"(TO_"<<getUppercase(castTo)<<" ";
+  }
   cout<<"( IntConst "<<num<<" )";
+  if(isCast){
+      cout<<" )";
+  }
 }
 stringconst_node::stringconst_node(string& s)
 {
@@ -581,7 +593,13 @@ stringconst_node::stringconst_node(string& s)
 
 void stringconst_node::print()
 {
+  if(isCast){
+    cout<<"(TO_"<<getUppercase(castTo)<<" ";
+  }
   cout<<"( StringConst "<<str<<" )"; 
+  if(isCast){
+      cout<<" )";
+  }
 }
 identifier_node::identifier_node(string& i)
 {
@@ -589,7 +607,13 @@ identifier_node::identifier_node(string& i)
 }
 void identifier_node::print()
 {
+  if(isCast){
+    cout<<"(TO_"<<getUppercase(castTo)<<" ";
+  }
   cout<<"( Id \" "<<id<<" \" )";
+  if(isCast){
+      cout<<" )";
+  }
 }
 identifier_array_ref_node::identifier_array_ref_node(string& i){
   id = i;
@@ -598,7 +622,13 @@ identifier_array_ref_node::identifier_array_ref_node(string& i){
 }
 void identifier_array_ref_node::print()
 {
+  if(isCast){
+    cout<<"(TO_"<<getUppercase(castTo)<<" ";
+  }
   cout<<"( Id \" "<<id<<" \" )"; 
+  if(isCast){
+      cout<<" )";
+  }
 }
 index_node::index_node(exp_node*& l, exp_node*& r){
   left = l;
@@ -610,9 +640,15 @@ index_node::index_node(exp_node*& l, exp_node*& r){
 }
 void index_node::print()
 {
+  if(isCast){
+    cout<<"(TO_"<<getUppercase(castTo)<<" ";
+  }
  cout<<"( ";
  left->print(); 
  cout<< " [ ";
  right->print(); 
  cout<< " ] "<<")"; 
+  if(isCast){
+      cout<<" )";
+  }
 }

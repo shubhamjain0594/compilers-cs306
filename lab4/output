@@ -1,9 +1,9 @@
-(Block [
+  	  	          	 	 	 								(Block [
 	(Ass ( Id " a " )(PP_INT( ( ( Id " b " ) [ ( IntConst 1 ) ] ) [ ( IntConst 2 ) ] )))
-	(Ass ( Id " c " )(Funcall( Id " a " )( FloatConst 2.4 ) ))
+	(Ass ( Id " c " )(Funcall( Id " a " )(TO_INT ( FloatConst 2.4 ) ) ))
 	(Ass ( Id " c " )(Funcall( Id " b " )))
 	(Ass ( Id " c " )(PLUS_INT( Id " c " )( Id " a " )))
-	(Ass ( Id " a " )(TO_INT (PLUS_FLOAT( Id " c " )( FloatConst 1.6 )) ))
+	(Ass ( Id " a " )(TO_INT (PLUS_FLOAT(TO_FLOAT ( Id " c " ) )( FloatConst 1.6 )) ))
 	(Ass ( Id " a " )(!_INT(Funcall( Id " c " ))))
 ])
 Global Symbol Table
