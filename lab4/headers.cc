@@ -43,6 +43,7 @@ public:
 class symbol_table{
 public:
   map<string, symbol_table_node*> st;
+  vector<decl_struct*> parameters; // used only in case of local symbol tables for functions 
   int offset;
   symbol_table();
   void insert_entry(string s, symbol_table_node* stn);
@@ -52,8 +53,6 @@ public:
 class abstract_astnode{
 public:
   virtual void print () = 0;
-  string name;
-  string type;
   int offset;
   int size;
 //   virtual std::string generate_code(const symbolTable&) = 0;
@@ -66,6 +65,10 @@ public:
 };
 
 class exp_node : public abstract_astnode{
+public:
+  bool isCast=0;
+  string castTo;
+  decl_struct* type;
 };
 
 class stmt_node : public abstract_astnode{

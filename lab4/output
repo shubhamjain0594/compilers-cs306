@@ -1,33 +1,38 @@
-      	 	 Line number: 4 : Error :variable redeclared
-	 	 	(Block [
-	(Ass ( Id " i " )( IntConst 2 ))
+  	 (Block [
+	(Return ( IntConst 0 ))
 ])
-  	 Line number: 12 : Error :variable declared void
-	 	  Line number: 15 : Error :function redeclared
-(Empty)
-  	 			  					(Block [
-	(For 
-		(ASSIGN( Id " i " )( IntConst 0 ))
-		(LT( Id " i " )( IntConst 6 ))
-		(PP( Id " i " ))
-		(Block [
-			(Ass ( Id " a " )(Funcall( Id " win " )( Id " india " ) ))
-		])
-	)
+ 	 (Block [
+	(Return ( IntConst 0 ))
+])
+   (Block [
+	(Return ( FloatConst 1.4 ))
+])
+      	 	 	 								(Block [
+	(Ass ( Id " a " )(PP_INT( ( ( Id " b " ) [ ( IntConst 1 ) ] ) [ ( IntConst 2 ) ] )))
+	(Ass ( Id " c " )(Funcall( Id " a " )( FloatConst 2.4 ) ))
+	(Ass ( Id " c " )(Funcall( Id " b " )))
+	(Ass ( Id " c " )(PLUS_INT( Id " c " )( Id " a " )))
+	(Ass ( Id " a " )(TO_INT (PLUS_FLOAT( Id " c " )( FloatConst 1.6 )) ))
+	(Ass ( Id " a " )(!_INT(Funcall( Id " c " ))))
 ])
 Global Symbol Table
 a function 0 int
+b function 0 int
+c function 0 int
 main function 0 void
 
 Symbol Table for a
-a local -8 array(2,array(1,array(3,int))) 24
-b local -32 array(4,float) 16
-i local -4 int 4
-x param 4 array(2,array(2,array(3,int))) 48
-y param 56 array(4,int) 16
-z param 52 int 4
+b param 4 int 4
+
+Symbol Table for b
+
+Symbol Table for c
 
 Symbol Table for main
 a param 4 int 4
+b local -8 array(2,array(3,int)) 24
+c local -32 int 4
+d param 12 array(2,int) 8
+e param 16 int 4
 i local -4 int 4
 
