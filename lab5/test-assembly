@@ -1,0 +1,15 @@
+int a(int b){
+	return 0;
+}
+int b(){
+	b();
+	return 0;
+}
+int c(){
+ return 1.4;
+}
+void main(int a, int d[2], int e)
+{
+	int f, g[1][2], h;
+	c();
+}

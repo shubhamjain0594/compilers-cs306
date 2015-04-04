@@ -1,0 +1,24 @@
+  	  		          	   	(Block [
+	(FuncallStmt( Id " c " ))
+])
+Global Symbol Table
+a function 0 int
+b function 0 int
+c function 0 int
+main function 0 void
+
+Symbol Table for a
+b param 4 int 4
+
+Symbol Table for b
+
+Symbol Table for c
+
+Symbol Table for main
+a param 4 int 4
+d param 8 array(2,int) 8
+e param 16 int 4
+f local -4 int 4
+g local -12 array(1,array(2,int)) 8
+h local -16 int 4
+

@@ -1,0 +1,8 @@
+rm -f Scanner*
+rm -f Parser*
+flexc++ lex.l; 
+bisonc++ --construction  parse.y; 
+[parse.y: warning] Line 513: 35 Shift/Reduce conflict(s)
+./sedscript
+g++  -g --std=c++11 lex.cc parse.cc main.cc;
+./a.out < test-assembly > output;
