@@ -1,18 +1,13 @@
-where to store return type of function
-error checks of various kinds
-setting offsets
+done:
+offset -> points to higher values
+changes made after submission
 
+to do:
+assumption after evaluating expression node value in in ebx
+after calling the function, the return value would be on top of the stack;
+line num 733: call the ex
+whether to pass symbol table to generate code
 
-type check
+how to get the offset at two places
 
-in declaraions:
-parameter cannot be void
-cannot be redeclared
-
-undeclared when used
-
-for functions:
-check for stuff when?
-
-
-whether returning correct thing
+check for casting in int const and float constant

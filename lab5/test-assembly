@@ -10,6 +10,9 @@ int c(){
 }
 void main(int a, int d[2], int e)
 {
+	float z;
 	int f, g[1][2], h;
 	c();
+	a=a*e;
+	z=7;
 }

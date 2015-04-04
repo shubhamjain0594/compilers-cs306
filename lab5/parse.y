@@ -368,7 +368,8 @@ additive_expression
     if(check_int_float(($1)->type->type)&&check_int_float(($3)->type->type)&&check_arith_type($1, $3)){
       string k;
       k = "PLUS";
-      $$ = new op_node(k,$1,$3);  
+      $$ = new op_node(k,$1,$3);
+      //($$)->generate_code();  
     }
   } 
   | additive_expression '-' multiplicative_expression
@@ -378,7 +379,8 @@ additive_expression
     if(check_int_float(($1)->type->type)&&check_int_float(($3)->type->type)&&check_arith_type($1, $3)){
       string k;
       k = "MINUS";
-      $$ = new op_node(k,$1,$3); 
+      $$ = new op_node(k,$1,$3);
+      //($$)->generate_code(); 
     }
   } 
   ;
@@ -395,7 +397,9 @@ multiplicative_expression
     if(check_int_float(($1)->type->type)&&check_int_float(($3)->type->type)&&check_arith_type($1, $3)){
       string k;
       k = "MULTIPLY";
-      $$ = new op_node(k,$1,$3);  
+      $$ = new op_node(k,$1,$3);
+      //string code=($$)->generate_code();  
+      //cout<<code;
     }
   } 
   | multiplicative_expression '/' unary_expression
@@ -405,7 +409,8 @@ multiplicative_expression
     if(check_int_float(($1)->type->type)&&check_int_float(($3)->type->type)&&check_arith_type($1, $3)){
       string k;
       k = "DIVIDE";
-      $$ = new op_node(k,$1,$3);  
+      $$ = new op_node(k,$1,$3);
+      //($$)->generate_code();  
     }
   } 
   ;
