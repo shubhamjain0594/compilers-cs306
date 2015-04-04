@@ -1,0 +1,156 @@
+ 
+	
+	
+	
+		
+		  
+		
+	
+
+	
+		
+		  
+		
+	
+	
+	
+		   
+		
+		
+			  
+		
+		
+	
+	
+	  
+
+	
+	
+	
+	
+	
+
+	
+		 
+			
+	
+
+	
+		 
+			
+	
+	
+	
+	
+	
+	   
+	 
+	
+	
+	
+	   
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+(Block [
+	(For 
+		(ASSIGN( Id " i " )( IntConst 0 ))
+		(LT( Id " i " )( IntConst 6 ))
+		(PP( Id " i " ))
+		(Block [
+			(Ass ( Id " a " )(Funcall( Id " win " )( Id " india " ) ))
+		])
+	)
+	(For 
+		(ASSIGN( Id " i " )( IntConst 0 ))
+		(LT( Id " i " )( IntConst 6 ))
+		(PP( Id " i " ))
+		(Block [
+			(Ass ( Id " a " )(Funcall( Id " win " )( Id " india " ) ))
+		])
+	)
+	(Block [
+		(For 
+			(ASSIGN( Id " i " )( IntConst 0 ))
+			(LT( Id " j " )( IntConst 300 ))
+			(PP( Id " j " ))
+			(Ass ( Id " a " )(PP( Id " run " )))
+		)
+		(While 
+			( IntConst 1 )
+			(Block [
+				(Ass ( Id " b " )(PP( Id " x " )))
+			])
+		)
+	])
+	(For 
+		(ASSIGN( Id " i " )( IntConst 9 ))
+		(LT( Id " i " )( IntConst 6 ))
+		(PP( Id " i " ))
+		(Block [
+			(Empty)
+		])
+	)
+	(Ass ( Id " j " )(PLUS( IntConst 2 )( Id " b " )))
+	(Ass ( Id " j " )(MULTIPLY( IntConst 2 )( Id " b " )))
+	(Ass ( Id " j " )(MULTIPLY( Id " b " )( Id " b " )))
+	(Ass ( Id " j " )(DIVIDE( IntConst 2 )( Id " b " )))
+	(Ass ( Id " j " )(DIVIDE( FloatConst 2.97 )( Id " l " )))
+	(For 
+		(ASSIGN( Id " i " )( IntConst 0 ))
+		(LT( Id " i " )( IntConst 2 ))
+		(PP( Id " i " ))
+		(Block [
+			(For 
+				(ASSIGN( Id " j " )( IntConst 0 ))
+				(LT( Id " j " )( IntConst 2 ))
+				(PP( Id " j " ))
+				(For 
+					(ASSIGN( Id " l " )( IntConst 2 ))
+					(LT( Id " l " )( IntConst 4 ))
+					(PP( Id " l " ))
+					(Empty)
+				)
+			)
+		])
+	)
+	(Ass ( Id " x " )( StringConst "----------------------------------------" ))
+	(For 
+		(ASSIGN( Id " j " )( IntConst 0 ))
+		(LT( Id " j " )( IntConst 2 ))
+		(PP( Id " j " ))
+		(While 
+			(EQ( Id " x " )( IntConst 8 ))
+			(Empty)
+		)
+	)
+	(Ass ( Id " x " )(Funcall( Id " f " )( Id " a " ) ( Id " b " ) ( Id " c " ) ))
+	(Ass ( Id " g " )(Funcall( Id " l " )))
+	(If 
+		(GE( Id " g " )( IntConst 2 ))
+		(Block [
+			(Ass ( Id " c " )(Funcall( Id " po " )))
+			(Ass ( Id " d " )(PLUS( IntConst 100 )( IntConst 1 )))
+		])
+		(Empty)
+	)
+	(Block [
+		(Ass ( Id " v " )( IntConst 9 ))
+	])
+	(If 
+		(GE( Id " g " )( IntConst 2 ))
+		(Block [
+			(Ass ( Id " c " )(Funcall( Id " po " )))
+			(Ass ( Id " d " )(PLUS( IntConst 100 )( IntConst 1 )))
+		])
+		(Empty)
+	)
+])
+

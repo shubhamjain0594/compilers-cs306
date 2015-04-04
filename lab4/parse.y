@@ -50,25 +50,21 @@ translation_unit
 
 // checking if function redefined with same name
 function_definition
-  : type_specifier {current_scope = new symbol_table;current_scope->offset = 0; does_return=false;current_func_type=$1;} fun_declarator {current_scope->offset=-4;} compound_statement 
+  : type_specifier {current_scope = new symbol_table;current_scope->offset = 0; does_return=false;current_func_type=$1;} fun_declarator {current_scope->offset=-4;if(check_declaration_function($3))
+    {
+      symbol_table_node* stn = new symbol_table_node($3, "function", current_scope);
+      decl_struct *temp = new decl_struct($3);
+      temp->type = $1;
+      stn->decl_type = temp;
+      gst->insert_entry($3, stn);
+      current_func_name=$3;
+  }
+  } compound_statement 
   {
     if(!does_return && $1!="void"){
       add_error(Scanner::line_num, "function must return "+current_func_type);
     }
-  	if(check_declaration_function($3))
-  	{
-	    $$ = $5;
-	    symbol_table_node* stn = new symbol_table_node($3, "function", current_scope);
-	    decl_struct *temp = new decl_struct($3);
-	    temp->type = $1;
-	    stn->decl_type = temp;
-	    gst->insert_entry($3, stn);
-      current_func_name=$3;
-	}
-	else
-	{
-		$$ = new stmt_node();
-	}
+    $$ = $5;
   }
   ;
 

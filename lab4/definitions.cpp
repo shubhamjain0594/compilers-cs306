@@ -187,7 +187,7 @@ bool check_declaration(string name, string type)
 // used to check if variable used in expression is declared before using
 bool check_declared(string name){
   // current_scope->print();
-  if(exists(name, current_scope)||exists(name, gst)){
+  if(exists(name, current_scope)){
     return true;
   }else{
     add_error(Scanner::line_num,"undeclared variable "+name);
@@ -284,6 +284,13 @@ string getUppercase(string str){
 }
 // checks if function call is valid by checking parameters and existence of function
 bool valid_funcall(string& s, exp_node_list*& e){
+  if(s=="printf"){
+    return true;
+  }
+  if(exists(s, current_scope)){
+    add_error(Scanner::line_num,"invalid call to variable "+s);
+    return false;
+  }
   if(!exists(s, gst)){
     add_error(Scanner::line_num,"undefined function "+s);
     return false;
@@ -395,7 +402,7 @@ void funcall_stmt_node::print(){
   cout<<"(FuncallStmt";
   cout<<"( Id \" "<<id<<" \" )";
   enl->print();
-  cout<<")";
+  cout<<")"<<endl;
 }
 if_node::if_node(exp_node*& l, stmt_node*& m, stmt_node*& r)
 {
