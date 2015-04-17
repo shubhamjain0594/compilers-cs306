@@ -1,18 +1,38 @@
-int a(int b){
-	return 0;
-}
-int b(){
-	b();
-	return 0;
-}
-int c(){
- return 1.4;
-}
-void main(int a, int d[2], int e)
+float fact(int n)
 {
-	float z;
-	int f, g[1][2], h;
-	c();
-	a=a*e;
-	z=7;
+	if(n==0) return 1.0;
+	else return n*fact(n-1);
 }
+
+void r(int a)
+{
+	printf("Value of j at present is ",a);
+}
+void main() {
+	int i;
+	int j;
+	int a[5][5];
+	i=0;
+	while(i!=(1.0+2*fact(2*fact(0.0))))	
+	{
+		for(j=0;j<5;j++)
+		{
+			if((i==fact(1*fact(0.0)) && j==(1.0+fact(2*fact(0.0))))||((i==(fact(2*fact(0.0))+1.0)) && j==fact(2*fact(0.0))))
+			{
+				a[i][j]=fact(i+j);
+			}
+			else
+			a[i][j]=fact(fact(i)/2);
+		}
+		i=i+1;
+	}
+	for(i=0;i<5;i++)	
+	{
+		for(j=0;j<5;j++)
+		{
+			printf(a[i][j]," ");
+		}
+		r(j);printf("\n");
+	}
+}
+

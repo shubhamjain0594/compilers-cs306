@@ -17,7 +17,10 @@ symbol_table *current_scope = gst;
 string current_func_type="";
 string current_func_name="";
 set<string> printables;
-vector<string> errors;
+vector<string> regs_type(4);
+string code_set="";
+// keeps track of labels used and gives unique labels for each time
+int label_num=0;
 
 decl_struct::decl_struct(string n)
 {
@@ -55,7 +58,7 @@ void decl_struct::print()
   for(int i=0; i<indices.size(); i++)
   {
     cout<<")";
-  }
+}
 }
 
 symbol_table_node::symbol_table_node(string n, string t, int o)
@@ -64,11 +67,11 @@ symbol_table_node::symbol_table_node(string n, string t, int o)
   offset = o;
   if(type=="int")
   {
-      size=4;
+    size=4;
   }
   else if(type=="void")
   {
-      size = 0;
+    size = 0;
   }
 }
 
@@ -246,16 +249,6 @@ bool check_arith_type(exp_node*& l, exp_node*& r){
   add_error(Scanner::line_num, "incompatible types");
   return false;
 }
-// checks if two expressions have same size of indices
-// does not check the type of expressions
-bool check_logical_type(exp_node*& l, exp_node*& r){
-  // cout<<l->type->type<<" "<<r->type->type<<" "<<l->type->indices.size()<<" "<<r->type->indices.size()<<endl;
-  if(l->type->indices.size()==r->type->indices.size()){
-    return true;
-  }
-  add_error(Scanner::line_num, "incompatible types");
-  return false;
-}
 // checks if type is int
 bool check_int(string s){
   if(s=="int"){
@@ -273,6 +266,36 @@ bool check_int_float(string s){
   add_error(Scanner::line_num, "float or int is required");
   return false;
 }
+// checks if type of expression is int or float
+// also has side effect of casting expression to int if has float
+bool check_logical_type(exp_node*& e){
+  // cout<<l->type->type<<" "<<r->type->type<<" "<<l->type->indices.size()<<" "<<r->type->indices.size()<<endl;
+  if(check_int_float(e->type->type)){
+    if(e->type->type=="float"){
+      e->isCast=true;
+      e->castTo="int";
+    }
+    return true;
+  }
+  return false;
+}
+// checks if type of expression is int or float
+// also has side effect of casting expression to int if has float
+bool check_logical_type(exp_node*& l, exp_node*& r){
+  // cout<<l->type->type<<" "<<r->type->type<<" "<<l->type->indices.size()<<" "<<r->type->indices.size()<<endl;
+  if(check_int_float(l->type->type)&&check_int_float(r->type->type)){
+    if(l->type->type=="float"){
+      l->isCast=true;
+      l->castTo="int";
+    }
+    if(r->type->type=="float"){
+      r->isCast=true;
+      r->castTo="int";
+    }
+    return true;
+  }
+  return false;
+}
 // puts uppercase string in str
 string getUppercase(string str){
   string s=str;
@@ -284,8 +307,11 @@ string getUppercase(string str){
 }
 // checks if function call is valid by checking parameters and existence of function
 bool valid_funcall(string& s, exp_node_list*& e){
-  if(s=="printf"){
+  if(s=="printf"&&e->exp_list->size()>0){
     return true;
+  }else if(s=="printf"&&e->exp_list->size()==0){
+    add_error(Scanner::line_num,"requires at least one argument");
+    return false;
   }
   if(exists(s, current_scope)){
     add_error(Scanner::line_num,"invalid call to variable "+s);
@@ -327,6 +353,14 @@ bool check_return_expression(exp_node*& r){
       add_error(Scanner::line_num,"invalid return expression");
       return false;
     }
+  }
+  return true;
+}
+// checks if identifier is printf, it can be used in funcall node
+bool check_printf(string& s){
+  if(s=="printf"){
+    add_error(Scanner::line_num,"invalid function call to "+s);
+    return false;
   }
   return true;
 }
@@ -486,7 +520,7 @@ op_node::op_node(string& o, exp_node*& l, exp_node*& r)
   left = l;
   right = r;
   if(o=="GE"||o=="LE"||o=="LT"||o=="GT"||o=="NE"||o=="EQ"||o=="AND"||o=="OR"){
-    type=new decl_struct(o);
+    type = new decl_struct(o);
     type->type="int";
   }
 }
@@ -500,7 +534,7 @@ void op_node::print(){
   right->print();
   cout<<")";
   if(isCast){
-      cout<<" )";
+    cout<<" )";
   }
 }
 
@@ -520,7 +554,7 @@ void unary_op_node::print(){
   child->print();
   cout<<")";
   if(isCast){
-      cout<<" )";
+    cout<<" )";
   }
 }
 
@@ -539,8 +573,8 @@ void funcall_node::print(){
   enl->print();
   cout<<")";
   if(isCast){
-      cout<<" )";
-  }
+    cout<<" )";
+  } 
 }
 
 exp_node_list::exp_node_list(){ 
@@ -560,6 +594,7 @@ void exp_node_list::print(){
 
 floatconst_node::floatconst_node(string& n)
 {
+  isIndex = 1;
   num = atof(n.c_str());
   type = new decl_struct(n);
   type->type = "float";
@@ -572,11 +607,12 @@ void floatconst_node::print()
   }
   cout<<"( FloatConst "<<num<<" )"; 
   if(isCast){
-      cout<<" )";
+    cout<<" )";
   } 
 }
 intconst_node::intconst_node(string& n)
 {
+  isIndex = 1;
   num = atoi(n.c_str());
   type = new decl_struct(n);
   type->type = "int";
@@ -588,7 +624,7 @@ void intconst_node::print()
   }
   cout<<"( IntConst "<<num<<" )";
   if(isCast){
-      cout<<" )";
+    cout<<" )";
   }
 }
 stringconst_node::stringconst_node(string& s)
@@ -605,7 +641,7 @@ void stringconst_node::print()
   }
   cout<<"( StringConst "<<str<<" )"; 
   if(isCast){
-      cout<<" )";
+    cout<<" )";
   }
 }
 identifier_node::identifier_node(string& i)
@@ -619,71 +655,830 @@ void identifier_node::print()
   }
   cout<<"( Id \" "<<id<<" \" )";
   if(isCast){
-      cout<<" )";
+    cout<<" )";
   }
 }
-identifier_array_ref_node::identifier_array_ref_node(string& i){
+array_ref_node::array_ref_node(string& i){
   id = i;
+  exp = new vector<exp_node*>();
   type = get_type(i); 
+  isIndex = 1;
   // cout<<"Here"<<endl;
 }
-void identifier_array_ref_node::print()
+void array_ref_node::print()
 {
   if(isCast){
     cout<<"(TO_"<<getUppercase(castTo)<<" ";
   }
-  cout<<"( Id \" "<<id<<" \" )"; 
+  cout<<"( Id \" "<<id; 
+  for(int i=0;i<exp->size();i++){
+    cout<< " [ ";
+    (*exp)[i]->print(); 
+    cout<< " ] ";   
+  }
+  cout<<" \" )";
   if(isCast){
-      cout<<" )";
+    cout<<" )";
   }
 }
-index_node::index_node(exp_node*& l, exp_node*& r){
-  left = l;
-  right = r;
-  type=l->type;
-  // cout<<l->type->name<<endl;
-  type->indices.erase(type->indices.begin());
-  // cout<<type->indices.size()<<endl;
-}
-void index_node::print()
-{
-  if(isCast){
-    cout<<"(TO_"<<getUppercase(castTo)<<" ";
-  }
- cout<<"( ";
- left->print(); 
- cout<< " [ ";
- right->print(); 
- cout<< " ] "<<")"; 
-  if(isCast){
-      cout<<" )";
-  }
-}
-
 
 ////////////////////////////////////////////////////////////////////////////
+
+// returns offset of id as in symbol table
+string getOffset(string id, symbol_table* stble){
+  return std::to_string(stble->st[id]->offset);
+}
+// returns type of an expression taking into account the cast
+string getType(exp_node*& e){
+  if(!e->isCast){
+    return e->type->type;
+  }
+  return e->castTo;
+}
+// returns size of index at i for variable id
+int getIndexSize(string id, int i, symbol_table* stble){
+  return (((stble->st)[id])->decl_type->indices)[i];
+}
+
+string getReg(int i)
+{
+
+  switch (i) {
+    case 1:
+    return "eax";
+    case 2:
+    return "ebx";
+    case 3:
+    return "ecx";
+    case 4:
+    return "edx";
+    default:
+    return "none";
+  }
+}
 
 void add_code(string& code, string to_add)
 {
   if(to_add!="")
-    code = code + to_add + ";\n";
+    code = code +"\t"+to_add + ";\n";
+}
+// returns the offset of local variable at top point in stack so that it can be used for pointing stack pointer to correct position
+int getmin_offset(symbol_table* current_sym_tab)
+{
+  int min=0;
+  typedef map<string, symbol_table_node*>::iterator it_type;
+  for(it_type iterator = current_sym_tab->st.begin(); iterator != current_sym_tab->st.end(); iterator++) {
+    // iterator->first = key
+    if(iterator->second->offset<min){
+      min=iterator->second->offset;
+    }
+    // Repeat if you also want to iterate through the second map.
+  }
+  return min;
+}
+// adds the code to final code set, called from parser
+void gencode(stmt_node*& st, string func_name){
+  code_set = code_set+"void "+current_func_name+"(){\n";
+  if(current_func_name=="main"){
+    if(current_func_type=="int"){
+      add_code(code_set,"pushi(0)");    
+    }else if(current_func_type=="float"){
+      add_code(code_set,"pushf(0)");    
+    }
+  }
+  add_code(code_set,"pushi(ebp)");
+  add_code(code_set,"move(esp, ebp)");
+  add_code(code_set,"addi("+std::to_string(getmin_offset(current_scope))+", esp)");
+  code_set=code_set+st->generate_code(current_scope);
+  add_code(code_set,"e: ");
+  add_code(code_set,"move(ebp, esp)");
+  add_code(code_set,"loadi(ind(ebp), ebp)");
+  add_code(code_set,"popi(1)");
+  add_code(code_set,"return");
+  if(current_func_name=="main"){
+    if(current_func_type=="int"){
+      add_code(code_set,"popi(0)");    
+    }else if(current_func_type=="float"){
+      add_code(code_set,"popf(0)");    
+    }
+  }
+  code_set = code_set+"}\n";
+}
+
+void add_label(string& code){
+  add_code(code, "l"+std::to_string(label_num)+": ");
+  label_num++;
+}
+
+string intconst_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code="";
+  string temp_type="int";
+  //get the free register
+  string temp_reg = getReg(freeReg);
+  //get the value in temp_reg
+  add_code(code, "move("+std::to_string(num)+", "+temp_reg+")");
+  //type cast if required
+  if(isCast)
+  { 
+    temp_type = castTo;
+    if(castTo=="float"){
+      add_code(code, "intTofloat("+temp_reg+")");
+    }
+  }
+  //push it in stack if required
+  if(onStack)
+  {
+    if(temp_type=="int")
+      add_code(code, "pushi("+temp_reg+")");
+    else if(temp_type=="float")
+      add_code(code, "pushf("+temp_reg+")");
+  }
+  regs_type[freeReg-1]=temp_type;
+  return code;
+}
+
+string floatconst_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code="";
+  string temp_type="float";
+  //get the free register
+  string temp_reg = getReg(freeReg);
+  //get the value in ebx
+  add_code(code, "move("+std::to_string(num)+", "+temp_reg+")");
+  //type cast if required
+  if(isCast)
+  { 
+    temp_type = castTo;
+    if(castTo=="int"){
+      add_code(code, "floatToint("+temp_reg+")");
+    }
+  }
+  //push it in stack if required
+  if(onStack)
+  {
+    if(temp_type=="int")
+      add_code(code, "pushi("+temp_reg+")");
+    else if(temp_type=="float")
+      add_code(code, "pushf("+temp_reg+")");
+  }
+  regs_type[freeReg-1]=temp_type;
+  return code;
+}
+
+// code to handle array ref nodes
+string array_ref_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code="";
+  string temp_type = type->type;
+  //get the free register
+  string temp_reg = getReg(freeReg);
+  //get offset somehow;
+  //int offset = get_offset();
+  string offset = getOffset(id, current_sym_tab);
+  // case when value is a variable not an array
+  if(exp->size()==0){
+    // if return offset is set then return only offset
+    if(retOff){
+      add_code(code, "move("+offset+", "+temp_reg+")");
+      regs_type[freeReg-1] = "int";
+    }
+    else{
+      //load the value in ebx
+      if(temp_type=="int")
+        add_code(code, "loadi(ind(ebp, "+offset+"),  "+temp_reg+")");
+      else if(temp_type=="float")
+        add_code(code, "loadf(ind(ebp, "+offset+"),  "+temp_reg+")");
+    //type cast as required
+      if(isCast){ 
+        temp_type = castTo;
+        if(castTo=="float"){
+          add_code(code, "intTofloat( "+temp_reg+")");
+        }
+        else if(castTo=="int"){
+          add_code(code, "floatToint( "+temp_reg+")");
+        }
+      }
+      regs_type[freeReg-1] = temp_type;
+    }
+    //store it on stack if required otherwise let it remain on ebx
+    if(onStack)
+    {
+      if(temp_type=="int")
+        add_code(code, "pushi( "+temp_reg+")");
+      else if(temp_type=="float")
+        add_code(code, "pushf( "+temp_reg+")");
+    }
+    return code; 
+  }else{
+    // this variable maintains free register for each expression in indices
+    int tempFreeReg=freeReg;
+    for(int i=0;i<exp->size();i++){
+      (*exp)[i]->freeReg = tempFreeReg;
+      (*exp)[i]->onStack = 0;
+
+      if(i==0&&freeReg>2){
+        // for first expression if free registers are 2 then store on stack else store in register itself and after every iteration we will add offset in the register itself else on stack
+        tempFreeReg--;
+      }
+      code = code+(*exp)[i]->generate_code(current_sym_tab);
+      // adding offset to already found offset
+      string indexSize = std::to_string(getIndexSize(id, i, current_sym_tab));
+      // we multiply by size of index only in case when index is not the last in index list i.e a[2][3] of a[5][5] must give 2*5+3, we see 3 is not multiplied by 5
+      if(freeReg>2){
+        if(i==0&&i<exp->size()-1){
+          add_code(code, "muli("+indexSize+", "+temp_reg+")");
+        }else{
+          if(i<exp->size()-1){
+            add_code(code, "muli("+indexSize+", "+getReg(tempFreeReg)+")");
+          }
+          if(i!=0){
+            add_code(code, "addi("+getReg(tempFreeReg)+", "+temp_reg+")");
+          }
+        }
+      }else{
+        if(i<exp->size()-1){
+          add_code(code, "muli("+indexSize+", "+temp_reg+")");
+        }
+        if(i>0){
+          // case when we have to add up indices so we load from stack and add
+          add_code(code, "loadi(ind(esp), "+getReg(freeReg-1)+")");
+          add_code(code, "addi("+getReg(freeReg-1)+", "+temp_reg+")"); 
+        }
+        if(i<exp->size()-1&&i!=0){
+          // case when we have to store changed offset to top stack and replace old value
+          add_code(code, "storei("+temp_reg+", ind(esp))");
+        }else if(i==0&&i!=exp->size()-1){
+          // case when we have to push offset onto stack for first time and it must not be last index
+          add_code(code, "pushi("+temp_reg+")");
+        }else if(i==exp->size()-1&&i!=0){
+          // pop the stack thus restoring stack pointer to where it was before
+          add_code(code, "popi(1)");
+        }
+      }
+    }
+    // multiply offset by size of I or F
+    add_code(code, "muli(4, "+temp_reg+")");
+    // get offset of identifier from symbol table and put in freeReg-1
+    add_code(code, "move("+offset+", "+getReg(freeReg-1)+")");
+    // add the offset of id and array offset
+    add_code(code, "addi("+getReg(freeReg-1)+", "+temp_reg+")");
+    regs_type[freeReg-1] = "int";
+    // if return offset is set then return only offset
+    if(!retOff){
+      // calculate actual address in stack and store in temp_reg
+      add_code(code, "addi(ebp, "+temp_reg+")");
+      // address is stored in temp_reg
+      if(temp_type=="int")
+        add_code(code, "loadi(ind("+temp_reg+"),  "+temp_reg+")");
+      else if(temp_type=="float")
+        add_code(code, "loadf(ind("+temp_reg+"),  "+temp_reg+")");
+    //type cast as required
+      if(isCast){ 
+        temp_type = castTo;
+        if(castTo=="float")
+          add_code(code, "intTofloat( "+temp_reg+")");
+        else if(castTo=="int")
+          add_code(code, "floatToint( "+temp_reg+")");
+      }
+      regs_type[freeReg-1] = temp_type;
+    }
+    if(onStack)
+    {
+      if(temp_type=="int")
+        add_code(code, "pushi( "+temp_reg+")");
+      else if(temp_type=="float")
+        add_code(code, "pushf( "+temp_reg+")");
+    }
+  }
+  return code;
+}
+
+string unary_op_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code = "";
+  string temp_type = type->type;
+  //get the free register
+  string temp_reg = getReg(freeReg);
+  child->freeReg = freeReg;
+  child->onStack = 0;
+  code = code+child->generate_code(current_sym_tab);
+  if(op=="-"){
+    if(temp_type=="int"){
+      add_code(code,"muli(-1, "+temp_reg+")");
+    }else{
+      add_code(code,"mulf(-1, "+temp_reg+")");
+    }
+  }else if(op=="!"){
+    if(temp_type=="int"){
+      add_code(code,"cmpi(0, "+temp_reg+")");
+      add_code(code, "jne(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);
+    }else if(temp_type=="float"){
+      add_code(code,"cmpf(0, "+temp_reg+")");
+      add_code(code, "jne(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0.0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1.0, "+temp_reg+")");
+      add_label(code);
+    }
+  }else if(op=="PP"){
+    // code for assignment
+    // calculates actual address
+    add_code(code, "addi(ebp, "+temp_reg+")");
+    if(temp_type=="float"){
+      add_code(code, "loadf(ind("+temp_reg+"), "+getReg(freeReg-1)+")");
+      add_code(code, "addf(1, "+getReg(freeReg-1)+")");
+      add_code(code, "storef("+getReg(freeReg-1)+", ind("+temp_reg+"))");
+      add_code(code, "move("+getReg(freeReg-1)+", "+temp_reg+")");
+      add_code(code, "addf(-1, "+temp_reg+")");
+    }
+    else if(temp_type=="int"){
+      add_code(code, "loadi(ind("+temp_reg+"), "+getReg(freeReg-1)+")");
+      add_code(code, "addi(1, "+getReg(freeReg-1)+")");
+      add_code(code, "storei("+getReg(freeReg-1)+", ind("+temp_reg+"))");
+      add_code(code, "move("+getReg(freeReg-1)+", "+temp_reg+")");
+      add_code(code, "addi(-1, "+temp_reg+")");
+    }
+  }
+  if(isCast){ 
+    temp_type = castTo;
+    if(castTo=="float")
+      add_code(code, "intTofloat( "+temp_reg+")");
+    else if(castTo=="int")
+      add_code(code, "floatToint( "+temp_reg+")");
+  }
+  if(onStack)
+  {
+    if(temp_type=="int")
+      add_code(code, "pushi( "+temp_reg+")");
+    else if(temp_type=="float")
+      add_code(code, "pushf( "+temp_reg+")");
+  }
+  regs_type[freeReg-1] = temp_type;
+  return code;
+}
+
+string op_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code="";
+  string temp_type=type->type;
+  //get the free register
+  string temp_reg = getReg(freeReg);
+  // first evaluate the right expression and if free registers are equal to or less than 2 then store the value in stack and later pop it
+  right->freeReg = freeReg;
+  right->onStack = 0;
+  left->onStack = 0;
+  // we ensure here that ouput of right code is in top of rstack and output of left code is on the next regsiter on rstack
+  code = code + right->generate_code(current_sym_tab);
+  if(freeReg>2){
+    left->freeReg = freeReg-1;
+  }else{
+    left->freeReg = freeReg;
+    if(temp_type=="int")
+      add_code(code, "pushi( "+temp_reg+")");
+    else if(temp_type=="float")
+      add_code(code, "pushf( "+temp_reg+")");
+  }
+  code = code + left->generate_code(current_sym_tab);
+  if(!(freeReg>2)){
+    add_code(code, "move("+temp_reg+", "+getReg(freeReg-1)+")");
+    // restoring back stack pointer to initial state
+    if(temp_type=="int"){
+      add_code(code, "loadi(ind(esp), "+temp_reg+")");
+      add_code(code, "popi(1)");
+    }
+    else if(temp_type=="float"){
+      add_code(code, "loadf(ind(esp), "+temp_reg+")");
+      add_code(code, "popf(1)");
+    }
+  }
+  string leftReg = getReg(freeReg-1);
+  string rightReg = temp_reg;
+  if(op=="PLUS"){
+    // code for addition
+    if(temp_type=="float")
+      add_code(code, "addf("+leftReg+", "+rightReg+")");
+    else if(temp_type=="int")
+      add_code(code, "addi("+leftReg+", "+rightReg+")");
+  }else if (op=="MINUS"){
+    // code for subtraction
+    //multiply value in ebp by -1 and store in rightReg itself and then perform usual addition
+    if(temp_type=="float"){
+      add_code(code, "mulf(-1, "+rightReg+")");
+      add_code(code, "addf("+leftReg+", "+rightReg+")");
+    }
+    else if(temp_type=="int"){
+      add_code(code, "muli(-1, "+rightReg+")");
+      add_code(code, "addi("+leftReg+", "+rightReg+")");
+    }
+  }else if(op=="MULTIPLY"){
+    // code for multiplication
+    if(temp_type=="float"){
+      add_code(code, "mulf("+leftReg+", "+rightReg+")");
+    }
+    else if(temp_type=="int"){
+      add_code(code, "muli("+leftReg+", "+rightReg+")");
+    }
+  }else if(op=="DIVIDE"){
+    // code for division
+    if(temp_type=="float"){
+      add_code(code, "divf("+leftReg+", "+rightReg+")");
+    }
+    else if(temp_type=="int"){
+      add_code(code, "divi("+leftReg+", "+rightReg+")");
+    }
+  }else if(op=="ASSIGN"){
+    // code for assignment
+    // calculates actual address
+    add_code(code, "addi(ebp, "+leftReg+")");
+    if(temp_type=="float"){
+      add_code(code, "storef("+rightReg+", ind("+leftReg+"))");
+    }
+    else if(temp_type=="int"){
+      add_code(code, "storei("+rightReg+", ind("+leftReg+"))");
+    }
+  }
+  //in case of OR AND EQ NE LT LE GT GE the type of op_node is changed to int, but in that case we dont know the actual type of left or right operand which can be found using their type values. 
+  else if(op=="OR"){
+    // code for OR operation
+    string child_type = getType(left);
+    if(child_type=="int"){
+      add_code(code,"cmpi(0, "+leftReg+")");
+      add_code(code, "jne(l"+std::to_string(label_num)+")");
+      add_code(code,"cmpi(0, "+rightReg+")");
+      add_code(code, "jne(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code); 
+    }else if(child_type=="float"){
+      add_code(code,"cmpf(0, "+leftReg+")");
+      add_code(code, "jne(l"+std::to_string(label_num)+")");
+      add_code(code,"cmpf(0, "+rightReg+")");
+      add_code(code, "jne(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+      
+    }
+  }else if(op=="AND"){
+    // code for OR operation
+    string child_type = getType(left);
+    if(child_type=="int"){
+      add_code(code,"cmpi(0, "+leftReg+")");
+      add_code(code, "je(l"+std::to_string(label_num)+")");
+      add_code(code,"cmpi(0, "+rightReg+")");
+      add_code(code, "je(l"+std::to_string(label_num)+")");
+      add_code(code, "move(1, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(0, "+temp_reg+")");
+      add_label(code);    
+    }else if(child_type=="float"){
+      add_code(code,"cmpf(0, "+leftReg+")");
+      add_code(code, "je(l"+std::to_string(label_num)+")");
+      add_code(code,"cmpf(0, "+rightReg+")");
+      add_code(code, "je(l"+std::to_string(label_num)+")");
+      add_code(code, "move(1, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(0, "+temp_reg+")");
+      add_label(code);    
+      
+    }
+  }else if(op=="EQ"){
+    // code for OR operation
+    string child_type = getType(left);
+    if(child_type=="int"){
+      add_code(code,"cmpi("+rightReg+", "+leftReg+")");
+      add_code(code, "je(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+      
+    }else if(child_type=="float"){
+      add_code(code,"cmpf("+rightReg+", "+leftReg+")");
+      add_code(code, "je(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+      
+    }
+  }else if(op=="NE"){
+    // code for OR operation
+    string child_type = getType(left);
+    if(child_type=="int"){
+      add_code(code,"cmpi("+rightReg+", "+leftReg+")");
+      add_code(code, "jne(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+      
+    }else if(child_type=="float"){
+      add_code(code,"cmpf("+rightReg+", "+leftReg+")");
+      add_code(code, "jne(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+      
+    }
+  }else if(op=="LT"){
+    // code for OR operation
+    string child_type = getType(left);
+    if(child_type=="int"){
+      add_code(code,"cmpi("+leftReg+", "+rightReg+")");
+      add_code(code, "jl(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+    }else if(child_type=="float"){
+      add_code(code,"cmpf("+leftReg+", "+rightReg+")");
+      add_code(code, "jl(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+    }
+  }else if(op=="GT"){
+    // code for OR operation
+    string child_type = getType(left);
+    if(child_type=="int"){
+      add_code(code,"cmpi("+leftReg+", "+rightReg+")");
+      add_code(code, "jg(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+    }else if(child_type=="float"){
+      add_code(code,"cmpf("+leftReg+", "+rightReg+")");
+      add_code(code, "jg(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+    }
+  }else if(op=="GE"){
+    // code for OR operation
+    string child_type = getType(left);
+    if(child_type=="int"){
+      add_code(code,"cmpi("+leftReg+", "+rightReg+")");
+      add_code(code, "jge(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+    }else if(child_type=="float"){
+      add_code(code,"cmpf("+leftReg+", "+rightReg+")");
+      add_code(code, "jge(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+    }
+  }else if(op=="LE"){
+    // code for OR operation
+    string child_type = getType(left);
+    if(child_type=="int"){
+      add_code(code,"cmpi("+leftReg+", "+rightReg+")");
+      add_code(code, "jle(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+    }else if(child_type=="float"){
+      add_code(code,"cmpf("+leftReg+", "+rightReg+")");
+      add_code(code, "jle(l"+std::to_string(label_num)+")");
+      add_code(code, "move(0, "+temp_reg+")");
+      add_code(code, "j(l"+std::to_string(label_num+1)+")");
+      add_label(code);
+      add_code(code, "move(1, "+temp_reg+")");
+      add_label(code);    
+    }
+  }
+  // cast if required
+  if(isCast){ 
+    temp_type = castTo;
+    if(castTo=="float")
+      add_code(code, "intTofloat( "+temp_reg+")");
+    else if(castTo=="int")
+      add_code(code, "floatToint( "+temp_reg+")");
+  }
+  //push it on stack if required otherwise let it remain in ebx(do nothing)
+  if(onStack)
+  {
+    if(temp_type=="float")
+      add_code(code, "pushf(ebx)");
+    else if(temp_type=="int")
+      add_code(code, "pushi(ebx)");
+  }
+  regs_type[freeReg-1] = temp_type;
+  return code;
+}
+
+// code to handle expression node list
+string exp_node_list::generate_code(symbol_table* current_sym_tab)
+{
+  string code = "";
+  //get the free register
+  string temp_reg = getReg(freeReg);
+  //we have to travel the list in reverse as the first parameter should be pushed most recently
+  for(int i=exp_list->size()-1; i>=0; i--)
+  {
+    exp_node* temp_exp = (*exp_list)[i];
+    temp_exp->onStack = false;
+    temp_exp->freeReg=freeReg;
+    code=code+temp_exp->generate_code(current_sym_tab);
+    //assume that exp node stores the value in ebx after evaluation
+    if(!temp_exp->isCast){
+      if(temp_exp->type->type == "float")
+      {
+        add_code(code,"pushf("+temp_reg+")");
+      }
+      else if(temp_exp->type->type == "int")
+      {
+        add_code(code,"pushi("+temp_reg+")");
+      }
+    }else{
+      if(temp_exp->castTo == "float")
+      {
+        add_code(code,"pushf("+temp_reg+")");
+      }
+      else if(temp_exp->castTo == "int")
+      {
+        add_code(code,"pushi("+temp_reg+")");
+      }
+    }
+  }
+  return code;
+}
+
+string if_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code="";
+  string temp_type;
+  //get the free register
+  left->freeReg = 4;
+  left->onStack = false;
+  string left_code = left->generate_code(current_sym_tab);
+  string middle_code = middle->generate_code(current_sym_tab);
+  string right_code = right->generate_code(current_sym_tab);
+  code =  code + left_code;
+  add_code(code, "cmpi(0, "+getReg(4)+")");
+  add_code(code, "je(l"+std::to_string(label_num)+")");
+  code = code + middle_code;
+  add_code(code, "j(l"+std::to_string(label_num+1)+")");
+  add_label(code); 
+  code = code + right_code;
+  add_label(code);
+  return code;    
+}
+
+string while_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code="";
+  string temp_type;
+  //get the free register
+  left->freeReg = 4;
+  string left_code = left->generate_code(current_sym_tab);
+  string right_code = right->generate_code(current_sym_tab);
+  add_label(code);
+  code = code+left_code;
+  add_code(code, "cmpi(0, "+getReg(4)+")");
+  add_code(code, "je(l"+std::to_string(label_num)+")");
+  code = code+right_code;
+  add_code(code, "j(l"+std::to_string(label_num-1)+")");
+  add_label(code);
+  return code;
+}
+
+string for_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code="";
+  string temp_type;
+  //get the free register
+  left->freeReg = 4;
+  middle->freeReg = 4;
+  right->freeReg = 4;
+  string left_code = left->generate_code(current_sym_tab);
+  string middle_code = middle->generate_code(current_sym_tab);
+  string right_code = right->generate_code(current_sym_tab);
+  string body_code = body->generate_code(current_sym_tab);
+  code = code+left_code;
+  add_label(code);
+  code = code+middle_code;
+  add_code(code, "cmpi(0, "+getReg(4)+")");
+  add_code(code, "je(l"+std::to_string(label_num)+")");
+  code = code+body_code;
+  code = code+right_code;
+  add_code(code, "j(l"+std::to_string(label_num-1)+")");
+  add_label(code);
+  return code;
+}
+
+string ass_node::generate_code(symbol_table* current_sym_tab)
+{
+  // cout<<"Here"<<endl;
+  string code="";
+  string temp_type=left->type->type;
+  // first evaluate the right expression and if free registers are equal to or less than 2 then store the value in stack and later pop it
+  right->freeReg = 4;
+  right->onStack = 0;
+  left->onStack = 0;
+  // we ensure here that ouput of right code is in top of rstack and output of left code is on the next regsiter on rstack
+  code = code + right->generate_code(current_sym_tab);
+  left->freeReg = 3;
+  code = code + left->generate_code(current_sym_tab);
+  // contains left expression return value
+  // cout<<"Here"<<endl;
+  string leftReg = getReg(3);
+  // contains right expression return value
+  string rightReg = getReg(4);
+  // code for assignment
+  // calculates actual address
+  add_code(code, "addi(ebp, "+leftReg+")");
+  if(temp_type=="float"){
+    add_code(code, "storef("+rightReg+", ind("+leftReg+"))");
+  }
+  else if(temp_type=="int"){
+    add_code(code, "storei("+rightReg+", ind("+leftReg+"))");
+  }
+  return code;
+}
+
+// stores return value in return position
+string return_node::generate_code(symbol_table* current_sym_tab)
+{
+  string code = "";
+  string temp_type = child->type->type;
+  //get the free register
+  string temp_reg = getReg(4);
+  int offs=4;
+  if((current_sym_tab->parameters).size()!=0){
+    string last_param=(current_sym_tab->parameters)[(current_sym_tab->parameters).size()-1]->name; 
+    symbol_table_node* last_stn=(current_sym_tab->st)[last_param];
+    offs=last_stn->offset+last_stn->decl_type->calculate_size();
+  }
+  child->freeReg=4;
+  code=code+child->generate_code(current_sym_tab);
+  if(temp_type=="int"){
+    add_code(code,"storei("+temp_reg+", ind(ebp, "+std::to_string(offs)+"))");
+  }else if(temp_type=="float"){
+    add_code(code,"storef("+temp_reg+", ind(ebp, "+std::to_string(offs)+"))");
+  }
+  add_code(code,"j(e)");
+  return code;
 }
 
 string funcall_node::generate_code(symbol_table* current_sym_tab)
 {
   string code = "";
+  string temp_type = type->type;
+   //get the free register
+  string temp_reg = getReg(freeReg);
+  vector<string> temp_regs_type=regs_type;
+  for(int i=4;i>freeReg;i--){
+    if(temp_regs_type[i-1]=="int"){
+      add_code(code, "pushi("+getReg(i)+")");
+    }else if(temp_regs_type[i-1]=="float"){
+      add_code(code, "pushf("+getReg(i)+")");
+    }
+  }
   // make space for return value if not void
-  symbol_table_node* temp_func_st_node = gst->st[id];
-  string temp_type = temp_func_st_node->decl_type->type;
   if(temp_type == "int")
   {
     add_code(code,"pushi(0)");
   }
   else if(temp_type == "float")
   {
-      add_code(code,"pushf(0.0)");
+    add_code(code,"pushf(0.0)");
   }
   //push the parameters
+  enl->freeReg=4;
   code=code+enl->generate_code(current_sym_tab);
   //call the function;
   add_code(code,id+"()");
@@ -694,15 +1489,64 @@ string funcall_node::generate_code(symbol_table* current_sym_tab)
   {
     exp_node* temp_exp = (*temp_vec)[i];
     //determine the type of value generated by expression?
-    if(temp_exp->type->type == "float")
-    {
-      add_code(code,"popf(1)");
-    }
-    else if(temp_exp->type->type == "int")
-    {
-      add_code(code,"popi(1)");
+    if(!temp_exp->isCast){
+      if(temp_exp->type->type == "float")
+      {
+        add_code(code,"popf(1)");
+      }
+      else if(temp_exp->type->type == "int")
+      {
+        add_code(code,"popi(1)");
+      }
+    }else{
+      if(temp_exp->castTo == "float")
+      {
+        add_code(code,"popf(1)");
+      }
+      else if(temp_exp->castTo == "int")
+      {
+        add_code(code,"popi(1)");
+      }
     }
   }
+  // take the return value from stack to temp_reg
+  if(temp_type == "int")
+  {
+    add_code(code, "loadi(ind(esp), "+temp_reg+")");
+    add_code(code,"popi(1)");
+  }else if(temp_type == "float")
+  {
+    add_code(code, "loadf(ind(esp), "+temp_reg+")");
+    add_code(code,"popf(1)");
+  } 
+  for(int i=freeReg+1;i<5;i++){
+    if(temp_regs_type[i-1] == "int")
+    {
+      add_code(code, "loadi(ind(esp), "+getReg(i)+")");
+      add_code(code,"popi(1)");
+    }else if(temp_regs_type[i-1] == "float")
+    {
+      add_code(code, "loadf(ind(esp), "+getReg(i)+")");
+      add_code(code,"popf(1)");
+    }
+  }
+  // restore type of values in register
+  regs_type=temp_regs_type;
+  if(isCast){ 
+    temp_type = castTo;
+    if(castTo=="float")
+      add_code(code, "intTofloat( "+temp_reg+")");
+    else if(castTo=="int")
+      add_code(code, "floatToint( "+temp_reg+")");
+  }
+  if(onStack)
+  {
+    if(temp_type=="int")
+      add_code(code, "pushi( "+temp_reg+")");
+    else if(temp_type=="float")
+      add_code(code, "pushf( "+temp_reg+")");
+  }
+  regs_type[freeReg-1] = temp_type;
   return code;
 }
 
@@ -710,223 +1554,91 @@ string funcall_node::generate_code(symbol_table* current_sym_tab)
 string funcall_stmt_node::generate_code(symbol_table* current_sym_tab)
 {
   string code = "";
-  // make space for return value if not void
-  symbol_table_node* temp_func_st_node = gst->st[id];
-  cout<<id<<endl;
-  string temp_type = temp_func_st_node->decl_type->type;
-  if(temp_type == "int")
-  {
-    add_code(code,"pushi(0)");
-  }
-  else if(temp_type == "float")
-  {
-      add_code(code,"pushf(0.0)");
-  }
-  //push the parameters
-  code=code+enl->generate_code(current_sym_tab);
-  //call the function;
-  add_code(code,id+"()");
-  //cleanup code
-  //popping the params in reverse order of pushing
-  vector<exp_node*>* temp_vec = (enl->exp_list);
-  for(int i=0; i<temp_vec->size(); i++)
-  {
-    exp_node* temp_exp = (*temp_vec)[i];
-    //determine the type of value generated by expression?
-    if(temp_exp->type->type == "float")
+  // get symbol table entry of function from gst to get type
+  if(id!="printf"){
+    symbol_table_node* temp_func_st_node = gst->st[id];
+    string temp_type = temp_func_st_node->decl_type->type;
+     //get the free register
+    string temp_reg = getReg(4);
+    // make space for return value if not void
+    if(temp_type == "int")
     {
+      add_code(code,"pushi(0)");
+    }
+    else if(temp_type == "float")
+    {
+      add_code(code,"pushf(0.0)");
+    }
+    //push the parameters
+    enl->freeReg=4;
+    code=code+enl->generate_code(current_sym_tab);
+    //call the function;
+    add_code(code,id+"()");
+    //cleanup code
+    //popping the params in reverse order of pushing
+    vector<exp_node*>* temp_vec = (enl->exp_list);
+    for(int i=0; i<temp_vec->size(); i++)
+    {
+      exp_node* temp_exp = (*temp_vec)[i];
+      //determine the type of value generated by expression?
+      if(temp_exp->type->type == "float")
+      {
+        add_code(code,"popf(1)");
+      }
+      else if(temp_exp->type->type == "int")
+      {
+        add_code(code,"popi(1)");
+      }
+    }
+    // take the return value from stack to temp_reg
+    if(temp_type == "int")
+    {
+      add_code(code, "loadi(ind(esp), "+temp_reg+")");
+      add_code(code,"popi(1)");
+    }else if(temp_type == "float")
+    {
+      add_code(code, "loadf(ind(esp), "+temp_reg+")");
       add_code(code,"popf(1)");
     }
-    else if(temp_exp->type->type == "int")
-    {
-      add_code(code,"popi(1)");
+  }else{
+    for(int i=0;i<enl->exp_list->size();i++){
+      exp_node* e=(*(enl->exp_list))[i];
+      if(e->type->type=="string"){
+        add_code(code,"print_string("+e->generate_code(current_sym_tab)+")");
+      }else if(e->type->type=="int"){
+        e->freeReg=4;
+        code=code+e->generate_code(current_sym_tab);
+        add_code(code,"print_int("+getReg(4)+")");
+      }else if(e->type->type=="float"){
+        e->freeReg=4;
+        code=code+e->generate_code(current_sym_tab);
+        add_code(code,"print_float("+getReg(4)+")");
+      }
     }
   }
   return code;
 }
 
-
-string exp_node_list::generate_code(symbol_table* current_sym_tab)
+string stmt_node_list::generate_code(symbol_table* current_sym_tab)
 {
-  string code = "";
-  //we have to travel the list in reverse as the first parameter should be pushed most recently
-  for(int i=exp_list->size()-1; i>=0; i--)
-  {
-    exp_node* temp_exp = (*exp_list)[i];
-    temp_exp->on_stack = false;
-    temp_exp->generate_code(current_sym_tab);
-    //assume that exp node stores the value in ebx after evaluation
-    if(temp_exp->type->type == "float")
-    {
-      add_code(code,"pushf(ebx)");
-    }
-    else if(temp_exp->type->type == "int")
-    {
-      add_code(code,"pushi(ebx)");
-    }
+  string code="";
+  for(int i=0;i<stmt_list->size();i++){
+    code=code+(*stmt_list)[i]->generate_code(current_sym_tab);
   }
   return code;
 }
 
-
-string op_node::generate_code(symbol_table* current_sym_tab)
+string block_node::generate_code(symbol_table* current_sym_tab)
 {
-  string code;
-  string temp_type;
-  //cout<<"here1";
-  cout<<op;
-  if(op =="PLUS" || op=="MINUS" || op=="MULTIPLY" || op=="DIVIDE")
-  {
-    //cout<<"here2";
-    // stack top holds the value of left expression
-    left->on_stack = true;
-    code = code + left->generate_code(current_sym_tab);
-    //ebx holds the value of right expression
-    right->on_stack = false;
-    code = code + right->generate_code(current_sym_tab);
-    if(left->isCast)
-      temp_type = left->castTo; 
-    else
-      temp_type = left->type->type;
-    //get the value of left from stacktop to eax and pop the stack
-    if(temp_type=="float")
-    {
-      add_code(code, "loadf(ind(esp), eax)");
-      add_code(code, "popf(1)");
-    }
-    else if(temp_type=="int")
-    {
-      add_code(code, "loadi(ind(esp), eax)");
-      add_code(code, "popi(1)");
-    }
-    //perform operation as required
-    if(op=="PLUS")
-    {
-      if(type->type=="float")
-        add_code(code, "addf(eax, ebx)");
-      else if(type->type=="int")
-        add_code(code, "addi(eax, ebx)");
-    }
-    else if (op=="MINUS")
-    {
-      //multiply value in ebp by -1 and store in ebp itself
-      if(temp_type=="float")
-        add_code(code, "mulf(-1, ebx)");
-      else if(temp_type=="int")
-        add_code(code, "muli(-1, ebx)");
-      //perform the usual addition
-      if(type->type=="float")
-        add_code(code, "addf(eax, ebx)");
-      else if(type->type=="int")
-        add_code(code, "addi(eax, ebx)");
-    }
-    else if (op=="MULTIPLY")
-    {
-     //cout<<"here3";
-     if(type->type=="float")
-        add_code(code, "mulf(eax, ebx)");
-     else if(type->type=="int")
-        add_code(code, "muli(eax, ebx)"); 
-    }
-    else if (op=="DIVIDE")
-    {
-     //des = src/des;
-     if(type->type=="float")
-        add_code(code, "divi(eax, ebx)");
-     else if(type->type=="int")
-        add_code(code, "divf(eax, ebx)"); 
-    }
-    temp_type = type->type;
-    //type cast as required
-    if(isCast)
-    { 
-      temp_type = castTo;
-      if(castTo=="float")
-        add_code(code, "intTofloat(ebx)");
-      else if(castTo=="int")
-        add_code(code, "floatToint(ebx)");
-    }
-    //push it on stack if required otherwise let it remain in ebx(do nothing)
-    if(on_stack)
-    {
-      if(temp_type=="float")
-        add_code(code, "pushf(ebx)");
-      else if(temp_type=="int")
-        add_code(code, "pushi(ebx)");
-    }
-  }
-  else if(op=="ASSIGN")
-  {
-    //get offset of left expression somehow
-    int offset;// = left->get_offset();
-    //ebx holds the value of right expression
-    right->on_stack = false;
-    code = code + right->generate_code(current_sym_tab);
-    // do a type  check and store
-    temp_type = left->type->type;
-    //store the value of ebx in appropriate mem location
-    if(temp_type=="float")
-      add_code(code, "storef(ebx, ind(esp, offset)");
-    else
-      add_code(code, "storei(ebx, ind(esp, offset)");
-  }
+  string code="";
+  code = code + sln->generate_code(current_sym_tab);
   return code;
 }
 
-
-string intconst_node::generate_code(symbol_table* current_sym_tab)
-{
-  string code;
-  string temp_type=int;
-  //get the value in ebx
-  move(num, ebx);
-  //type cast if required
-  if(isCast)
-  { 
-    temp_type = castTo;
-    if(castTo=="float")
-      add_code(code, "intTofloat(ebx)");
-  }
-  //push it in stack if required
-  if(on_stack)
-  {
-    if(temp_type=="int")
-      add_code(code, "pushi(ebx)");
-    else if(temp_type=="float")
-      add_code(code, "pushf(ebx)");
-  }
-  return code;
+string stringconst_node::generate_code(symbol_table* current_sym_tab){
+  return str;
 }
 
-
-string floatconst_node::generate_code(symbol_table* current_sym_tab)
-{
-  string code;
-  string temp_type=float;
-  //get the value in ebx
-  move(num, ebx);
-  //type cast if required
-  if(isCast)
-  { 
-    temp_type = castTo;
-    if(castTo=="int")
-      add_code(code, "floatToint(ebx)");
-  }
-  //push it in stack if required
-  if(on_stack)
-  {
-    if(temp_type=="int")
-      add_code(code, "pushi(ebx)");
-    else if(temp_type=="float")
-      add_code(code, "pushf(ebx)");
-  }
-  return code;
-}
-
-string identifier_node::generate_code(symbol_table* current_sym_tab)
-{
-  string code;
-  //get offset somehow;
-  int offset = get_offset;
-
+string stmt_node::generate_code(symbol_table* current_sym_tab){
+  return "";
 }

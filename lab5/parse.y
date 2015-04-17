@@ -34,6 +34,7 @@ translation_unit
   : function_definition
   {
     //cout<<current_func_name<<endl;
+    gencode($1, current_func_name);
     if(printables.find(current_func_name)!=printables.end()){
       $1->print();
     }
@@ -42,6 +43,7 @@ translation_unit
   {
     $$ = $1;
     //cout<<current_func_name<<endl;
+    gencode($2, current_func_name);
     if(printables.find(current_func_name)!=printables.end()){
       $2->print();
     }
@@ -243,6 +245,7 @@ assignment_statement
   |  l_expression '=' expression ';'  
   {
     if(check_int_float($3->type->type)&&check_type($1, $3)){
+      ($1)->retOff=1;
       $$ = new ass_node($1,$3);
     }
   }
@@ -369,7 +372,7 @@ additive_expression
       string k;
       k = "PLUS";
       $$ = new op_node(k,$1,$3);
-      //($$)->generate_code();  
+      //($$)->generate_code(current_scope);  
     }
   } 
   | additive_expression '-' multiplicative_expression
@@ -380,7 +383,7 @@ additive_expression
       string k;
       k = "MINUS";
       $$ = new op_node(k,$1,$3);
-      //($$)->generate_code(); 
+      //($$)->generate_code(current_scope); 
     }
   } 
   ;
@@ -398,7 +401,7 @@ multiplicative_expression
       string k;
       k = "MULTIPLY";
       $$ = new op_node(k,$1,$3);
-      //string code=($$)->generate_code();  
+      //string code=($$)->generate_code(current_scope);  
       //cout<<code;
     }
   } 
@@ -410,7 +413,7 @@ multiplicative_expression
       string k;
       k = "DIVIDE";
       $$ = new op_node(k,$1,$3);
-      //($$)->generate_code();  
+      //($$)->generate_code(current_scope);  
     }
   } 
   ;
@@ -436,14 +439,14 @@ postfix_expression
   | IDENTIFIER '(' ')'
   { 
     exp_node_list* temp_list = new exp_node_list();
-    if(valid_funcall($1, temp_list)){
+    if(valid_funcall($1, temp_list)&&check_printf(($1))){
       $$ = new funcall_node($1, temp_list);
     }
   }
   | IDENTIFIER '(' expression_list ')'
   {
     // check if funcall exists and number of parameters and type of parameters are equal else we need to type cast
-    if(valid_funcall($1, $3)){
+    if(valid_funcall($1, $3)&&check_printf(($1))){
       $$ = new funcall_node($1, $3);
     }
   } 
@@ -452,6 +455,7 @@ postfix_expression
     // checks if type of l_expression is int or float and adds appropriate operator to INC_OP such as PP_FLOAT
     if(check_int_float($1->type->type)){
       string k = "PP";
+      ($1)->retOff=1;
       $$ = new unary_op_node(k,$1);
     }
   }
@@ -470,6 +474,7 @@ primary_expression
     if(check_int_float($3->type->type)&&check_type($1, $3))
     {
       string k ="ASSIGN";
+      ($1)->retOff=1;
       $$ = new op_node(k,$1,$3);
     }
   }
@@ -486,7 +491,7 @@ primary_expression
   | STRING_LITERAL
   {
     // creates new ast with type string and name as string literal
-    $$ = new stringconst_node($1);  
+    $$ = new stringconst_node($1);
   }
   | '(' expression ')'
   {
@@ -499,14 +504,17 @@ l_expression
     {
       // check for declaration of variable
       if(check_declared($1)){
-        $$ = new identifier_array_ref_node($1);     
+        $$ = new array_ref_node($1);     
       }
     }
     | l_expression '[' expression ']'
     // checks if l_expression array does not exceed number of dimensions of variable defined by array
     {
       if(check_inbound($1)&&check_int(($3)->type->type)){
-        $$ = new index_node($1, $3);   
+        ($1)->isIndex=0;
+        ($1)->exp->push_back($3);  
+        ($1)->type->indices.erase(($1)->type->indices.begin()); 
+        $$=$1;
       }
     }   
     ;
@@ -539,7 +547,7 @@ selection_statement
     : IF '(' expression ')' statement ELSE statement
     {
       //check that expression should not be of void type
-      if(check_int_float($3->type->type)){
+      if(check_logical_type($3)){
         $$ = new if_node($3,$5,$7);
       }
     } 
@@ -549,14 +557,14 @@ iteration_statement
   : WHILE '(' expression ')' statement
   {
     //check that expression should not be of void type
-    if(check_int_float($3->type->type)){
+    if(check_logical_type($3)){
       $$ = new while_node($3,$5);
     }
   }   
   | FOR '(' expression ';' expression ';' expression ')' statement  //modified this production
   {
     //check that expression2 should not be of void type
-    if(check_int_float($5->type->type)){
+    if(check_logical_type($5)){
       $$ = new for_node($3,$5,$7,$9);
     }
   }

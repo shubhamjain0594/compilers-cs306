@@ -16,9 +16,9 @@ protected:
 
 	int _flag;
 	enum Reg {
-		eax, ebx, ecx, edx, esp, ebp
+		eax, ebx, ecx, edx, esp, ebp, edi, esi
 	};
-	int I, F;
+	int I, F, P;
 	void intTofloat(Reg reg) {
 		char* r = getReg(reg);
 		*((float*) r) = (float) (*((int *) r));
@@ -65,7 +65,7 @@ protected:
 	// Store an integer from register to memory
 	void storei(Reg r, char* mem) {
 		char* reg = getReg(r);
-		*((float*) mem) = *((float*) reg);
+		*((int*) mem) = *((int*) reg);
 	}
 
 	// Store an immediate floating point number to memory
@@ -266,6 +266,13 @@ protected:
 		return ((*((char**) (reg))) + offset);
 	}
 
+	// Register indirection operator. Second register holds the integer offet from base register r
+	char* ind(Reg r, Reg offset) {
+		char* reg = getReg(r);
+		int intOffset = *((int*)getReg(offset));
+		return ((*((char**) (reg))) + intOffset);
+	}
+
 	// Special print methods
 	void print_int(Reg r) {
 		char* reg = getReg(r);
@@ -309,7 +316,9 @@ protected:
 	CMachineBase() {
 		I = sizeof(int);
 		F = sizeof(float);
+		P = sizeof(char*);
 		int max = F>I?F:I;
+		max = max>P?max:P;
 		_flag = 0;
 		_eax = new char[max];
 		_ebx = new char[max];
@@ -317,6 +326,8 @@ protected:
 		_edx = new char[max];
 		_ebp = new char[max];
 		_esp = new char[max];
+		_edi = new char[max];
+		_esi = new char[max];
 		*((char**) _ebp) = &_stack[STACK_SIZE - 1];
 		*((char**) _esp) = &_stack[STACK_SIZE - 1];
 	}
@@ -328,6 +339,8 @@ protected:
 		delete[] _edx;
 		delete[] _ebp;
 		delete[] _esp;
+		delete[] _edi;
+		delete[] _esi;
 	}
 
 	virtual void main() {
@@ -339,7 +352,7 @@ public:
 	}
 
 private:
-	char *_eax, *_ebx, *_ecx, *_edx, *_esp, *_ebp;
+	char *_eax, *_ebx, *_ecx, *_edx, *_esp, *_ebp, *_edi, *_esi;
 	char _stack[STACK_SIZE];
 
 	char* getReg(Reg r) {
@@ -356,6 +369,10 @@ private:
 			return _esp;
 		case ebp:
 			return _ebp;
+		case edi:
+			return _edi;
+		case esi:
+			return _esi;
 		default:
 			return (char*) 0;
 		}

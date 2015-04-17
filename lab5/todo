@@ -1,6 +1,28 @@
 done:
+intconst node
+floatconst node
+array_ref_node
+unary_op_node - ! PP
+op_node PLUS MINUS DIVIDE MULTIPLY ASSIGN OR AND EQ NE LT GT LE GE
+exp_node_list
+if_node
+while_node
+for_node
+ass_node
+block_node
+stmt_node_list
+return_node
+funcall_node
+funcall_stmt_node
+stringconst_node
 offset -> points to higher values
-changes made after submission
+
+changes remaining in:
+funcall,
+funcall stmt;
+
+todo:
+identifier_node
 
 to do:
 assumption after evaluating expression node value in in ebx
@@ -11,3 +33,7 @@ whether to pass symbol table to generate code
 how to get the offset at two places
 
 check for casting in int const and float constant
+
+if expression is typecasted then the typecase code is generated in expression itself
+
+in case of OR AND EQ NE LT LE GT GE the type of op_node is changed to int, but in that case we dont know the actual type of left or right operand which can be found using their type values. 

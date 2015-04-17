@@ -8,9 +8,8 @@ int b(){
 int c(){
  return 1.4;
 }
-void main(int a, int d[2], int e)
+void main(float a, int d[2], int e)
 {
-	int c;
-	c=1;
-	c();
+	int c[1][2];
+	c[0][1]=a=1*a;
 }

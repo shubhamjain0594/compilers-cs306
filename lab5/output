@@ -1,12 +1,23 @@
-  	  		          	 	   			(Block [
+(Block [
 	(FuncallStmt( Id " c " ))
-	(Ass ( Id " a " )(MULTIPLY_INT( Id " a " )( Id " e " )))
-	(Ass ( Id " z " )(TO_FLOAT ( IntConst 7 ) ))
+	(Ass ( Id " a " )(GT_INT( Id " a " )( Id " e " )))
+	(Ass ( Id " z " )(!_FLOAT( Id " z " )))
+	(If 
+		(TO_INT (!_FLOAT( Id " z " )) )
+		(Block [
+			(Ass ( Id " a " )( Id " e " ))
+		])
+		(Block [
+			(Ass ( Id " e " )( Id " a " ))
+			(Ass ( Id " z " )(TO_FLOAT (OR_INT(TO_FLOAT (PLUS_INT( Id " a " )( Id " e " )) )( Id " z " )) ))
+		])
+	)
+	(Ass ( Id " g [ ( IntConst 1 ) ]  [ (PLUS_INT( Id " a " )( Id " a " )) ]  " )( IntConst 4 ))
 ])
 Global Symbol Table
 a function 0 int
 b function 0 int
-c function 0 int
+c function 0 void
 main function 0 void
 
 Symbol Table for a

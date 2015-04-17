@@ -1,8 +1,9 @@
-all:   clean lex.cc parse.cc main.cc 
+all:   clean lex.cc parse.cc main.cc
 	./sedscript
 	g++  -g --std=c++11 lex.cc parse.cc main.cc;
-	./a.out main < test-assembly > output;
-#	a.out < test > junk;
+	./a.out < ${IP} > code.asm;
+	# machine.cc code.asm
+	g++ -g3 -O0 -m32 machine.cc -o ${OP}
 
 lex.cc: lex.l  Scanner.ih
 	flexc++ lex.l; 

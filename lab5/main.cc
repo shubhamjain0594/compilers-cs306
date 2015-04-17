@@ -6,6 +6,7 @@
 using namespace std;
 
 extern symbol_table *gst;
+extern string code_set;
 extern set<string> printables;
 int main (int argc, char** arg)
 {
@@ -16,15 +17,16 @@ int main (int argc, char** arg)
   }
   Parser parser;
   parser.parse();
-  cout<<"Global Symbol Table"<<endl;
-  gst->print();
-  cout<<endl;
-  for(map<string,symbol_table_node*>::iterator it = gst->st.begin(); it!=gst->st.end(); it++)
-  {
-  	cout<<"Symbol Table for "<<(*it).first<<endl;
-  	(((*it).second)->	local_symbol_table)->print();
-  	cout<<endl;	
-  }
+  cout<<code_set<<endl;
+  // cout<<"Global Symbol Table"<<endl;
+  // gst->print();
+  // cout<<endl;
+  // for(map<string,symbol_table_node*>::iterator it = gst->st.begin(); it!=gst->st.end(); it++)
+  // {
+  // 	cout<<"Symbol Table for "<<(*it).first<<endl;
+  // 	(((*it).second)->	local_symbol_table)->print();
+  // 	cout<<endl;	
+  // }
 }
 
 
